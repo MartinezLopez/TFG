@@ -10,6 +10,7 @@ import time
 import math
 import pylab
 from scipy.special import erfc
+import logging
 
 import matplotlib
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
@@ -308,7 +309,7 @@ class VentanaConfiguracion(QtGui.QWidget):
     
     # Configuramos base de tiempos y amplitud
     self.osc.set_horizontal(base_tiempos[str(t_bit)]) #Por los qstring de qt4
-    self.osc.set_vertical("1", "500mv", "AC", "1")
+    self.osc.set_vertical("1", "500mv", "DC", "1")
     
     # Llamada a modbus
     #mb = Modbus()
@@ -611,13 +612,8 @@ class Display(QtGui.QWidget):
     
     
     # Creamos dos subplots
-    #fig, (ax1, ax2) = plt.subplots(2, 1)
     ax1 = self.figure.add_subplot(211)
     ax2 = self.figure.add_subplot(212)
-    #mng = plt.get_current_fig_manager() # Maximizamos la ventana (TkAgg backend)
-    #icono = PhotoImage(file='/home/debian/Desktop/Aplicacion/img/icono.gif')
-    #mng.window.tk.call('wm', 'iconphoto', mng.window._w, icono)
-    #mng.resize(*mng.window.maxsize())
     
     # Representamos el canal 1
     ax1.plot(lista_tiempo1, lista_medidas1, 'y')
@@ -644,9 +640,10 @@ class DisplayOjo(QtGui.QWidget):
   def __init__(self, medidas, tiempo):
     super(DisplayOjo, self).__init__()
     
+    logging.basicConfig(level=logging.DEBUG) # Se mantienen las trazas hasta comprobar que desaparece el problema 
     self.setWindowTitle('Diagrama de ojo')
     self.setWindowIcon(QtGui.QIcon('/home/debian/Desktop/Aplicacion/img/icono.gif'))
-    self.setFixedSize(1050,700)
+    self.setFixedSize(900,700)
     
     self.creaInterfaz(medidas, tiempo)
   
@@ -660,7 +657,7 @@ class DisplayOjo(QtGui.QWidget):
     self.ax = plt.subplot2grid((2,2),(0,0), colspan=2) #Diagrama de ojo
     self.ax2 = plt.subplot2grid((2,2),(1,0))           #Histogramas
     self.ax3 = plt.subplot2grid((2,2),(1,1))           #erfc
-    plt.subplots_adjust(left=0.2, right=0.8, bottom=0.05, top=0.95, hspace=0.25)#top=1, bottom=0.55)
+    plt.subplots_adjust(left=0.15, right=0.85, bottom=0.1, top=0.9, hspace=0.25)#top=1, bottom=0.55)
     
     # Hacemos las medidas disponibles para todo el objeto
     self.lista_medidas = medidas
@@ -688,24 +685,31 @@ class DisplayOjo(QtGui.QWidget):
     self.ax.xaxis.set_minor_locator(MultipleLocator(self.inc_tiempo * 25))
     self.ax.yaxis.set_minor_locator(MultipleLocator(0.5))
     
-    # Etiquetas del plot con los histogramas
-    self.ax2.set_xlabel('amplitud')
-    self.ax2.hold(True)
-    
     # Creamos las barras de muestreo y umbral
     self.intervalo_amplitud = self.ax.yaxis.get_data_interval()
     umbralInit = (self.intervalo_amplitud[0]+self.intervalo_amplitud[1])/2
     muestreoInit = self.lista_tiempo[len(self.lista_tiempo)-1]/2
-
-    # Creamos las barras horizontales y verticales del subplot1
+    
+    # Pintamos la erfc
+    eje_x = np.arange(0, 10, 0.5)
+    #self.ax3.plot(eje_x, 0.5*erfc(eje_x/math.sqrt(2)), color='#08088a')
+    self.ax3.semilogy(eje_x, 0.5*erfc(eje_x/math.sqrt(2)), color='#08088a')
+    
+    logging.debug('se crea el eje semilogaritmico')
+    
+    self.ax3.set_xlabel('q')
+    self.ax3.set_ylabel('BER')
+    #self.ax3.set_yscale(u'log', nonposy='clip')
+    
+    # Creamos las barras horizontales y verticales de los subplots
     self.var = 25*self.inc_tiempo
     self.barMuestreo = self.ax.axvline(x=muestreoInit, color='green')
     self.barMuestreoMas = self.ax.axvline(x=muestreoInit + self.var, color='green', linestyle='--')
     self.barMuestreoMenos = self.ax.axvline(x=muestreoInit - self.var, color='green', linestyle='--')
     self.barUmbral = self.ax.axhline(y=umbralInit, color='blue')
-    
-    # Barra de umbral de decision en los subplots 2 y 3
     self.barDecision2 = self.ax2.axvline(x=umbralInit, color='blue')
+    self.bar_q = self.ax3.axvline(x=10, color='blue') # Puede ser que no funcionara al empezar en cero haciendo infinito el logaritmo
+    self.bar_ber = self.ax3.axhline(y=10, color='blue')
     
     # Esto hay que hacerlo antes de dibujar para que pueda poner los valores medios, q y la ber
     self.resultados_label = QtGui.QLabel(self)
@@ -724,8 +728,6 @@ class DisplayOjo(QtGui.QWidget):
     self.boton = QtGui.QPushButton("Pintar", self)
     self.connect(self.boton, QtCore.SIGNAL('clicked()'), self.botonClick)
     
-    #self.resultados_label = QtGui.QLabel(self)
-    
     hbox = QtGui.QHBoxLayout()
     
     for w in [self.muestreo_label, self.box1, self.umbral_label, self.box2, self.boton]:
@@ -742,6 +744,7 @@ class DisplayOjo(QtGui.QWidget):
     
   
   def botonClick(self):
+    logging.debug('entramos en la rutina botonclick')
     muestreo = int(self.box1.text()) # Cogemos los valores de los porcentajes como enteros de las cajas de texto
     umbral = int(self.box2.text())
     
@@ -760,10 +763,11 @@ class DisplayOjo(QtGui.QWidget):
     # Calculamos con que valores corresponden los porcentajes
     valMuestreo = (muestreo*self.lista_tiempo[len(self.lista_tiempo)-1])
     valUmbral = ((self.intervalo_amplitud[1] - self.intervalo_amplitud[0]) * umbral) + self.intervalo_amplitud[0]
-        
+    logging.debug('muestreo %s umbral %s', str(valMuestreo), str(valUmbral))    
     self.dibuja(valMuestreo, valUmbral)
   
   def dibuja(self, muestreo, umbral):
+    logging.debug('entramos en dibuja')
     puntoMuestreo = int(muestreo/self.inc_tiempo)
     amp = []
     
@@ -772,7 +776,7 @@ class DisplayOjo(QtGui.QWidget):
         try:
           amp.append(self.lista_medidas[i][puntoMuestreo + j])
         except IndexError:
-          print('oob')
+          logging.debug('oob')
     
     # Discriminamos segun el umbral
     val0 = []
@@ -786,6 +790,7 @@ class DisplayOjo(QtGui.QWidget):
     
     # Pintamos los histogramas y las gaussianas
     self.ax2.cla()
+    self.ax2.set_xlabel('amplitud')
     norm0, bins, patches = self.ax2.hist(val0, bins=200,range=[(5/4)*self.intervalo_amplitud[0], (5/4)*self.intervalo_amplitud[1]], normed=True, histtype='stepfilled', color='#ced8f6', rwidth=100)
     
     norm1, bins, patches = self.ax2.hist(val1, bins=200,range=[(5/4)*self.intervalo_amplitud[0], (5/4)*self.intervalo_amplitud[1]], normed=True, histtype='stepfilled', color='#f5a9a9', rwidth=100)
@@ -802,19 +807,48 @@ class DisplayOjo(QtGui.QWidget):
     q = math.fabs(v1-v0)/(sigma1+sigma0)
     ber = 0.5*erfc(q/math.sqrt(2))
     
-    self.muestra_resultados(v0, sigma0, v1, sigma1, q, ber)
-    #string = 'v0:' + str(round(v0,3)) + '   sigma0:' + str(round(sigma0,3)) + '   Q: ' + str(round(q,2)) + '\n' + 'v1:' + str(round(v1,3)) + '   sigma1:' + str(round(sigma1,3)) + '   BER: ' + str(ber)
-    #self.resultados_label.setText(string)
+    self.muestra_resultados(v0, sigma0, v1, sigma1, q, ber, len(val0), len(val1))
+    
+    #Pintamos la erfc
+    #self.ax3.cla()
+    #self.ax3.set_xlabel('q')
+    #self.ax3.set_ylabel('BER')
+    #self.ax3.set_yscale('log')
+    #eje_x = np.arange(0, 10, 0.5)
+    #bar_q = self.ax3.axvline(x=q, color='blue')
+    #bar_ber = self.ax3.axvline(x=ber, color='blue') hline
+    #self.ax3.hold(False)
+    '''plt.subplot(224)
+    plt.cla()
+    plt.semilogy(eje_x, 0.5*erfc(eje_x/math.sqrt(2)), color='#08088a') #parece que asi funciona mejor aunque no es definitivo
+    if q < 9.4:
+      plt.axhline(ber)
+      plt.axvline(q)
+    self.ax3.set_xlabel('q')
+    self.ax3.set_ylabel('BER')'''
+    #self.ax3.plot(eje_x, 0.5*erfc(eje_x/math.sqrt(2)), color='#08088a')
+    #self.ax3.set_yscale('log')
+    #self.ax3.hold(True)
+    #self.ax3.add_line(bar_q)
+    #self.ax3.add_line(bar_ber)
+    #self.ax3.set_yscale('log')
     
     # Recolocamos todas las barras
-    self.ax2.add_line(self.barDecision2) # Vuelve a pintar la barra del umbral cuando se redibuja #aqui hay algo que no le sienta bien
+    self.ax2.add_line(self.barDecision2) # Vuelve a pintar la barra del umbral cuando se redibuja
+    self.ax3.add_line(self.bar_q)
+    self.ax3.add_line(self.bar_ber)
     self.barMuestreo.set_xdata(muestreo)
     self.barMuestreoMas.set_xdata(muestreo + self.var)
     self.barMuestreoMenos.set_xdata(muestreo - self.var)
     self.barUmbral.set_ydata(umbral)
     self.barDecision2.set_xdata(umbral)
+    logging.debug('colocamos las barras en ax3')
+    self.bar_q.set_xdata(q)
+    self.bar_ber.set_ydata(ber)
+    logging.debug('colocadas')
     
     self.canvas.draw()
+    logging.debug('ya se ha redibujado')
   
   def media_y_varianza(self, data): 
     media = 0.0
@@ -828,9 +862,9 @@ class DisplayOjo(QtGui.QWidget):
     var = math.sqrt(var / (n-1))
     return media, var
   
-  def muestra_resultados(self, v0, sigma0, v1, sigma1, q, ber):
-    string = 'v0: ' + str(round(v0,3)) + '\tsigma0: ' + str(round(sigma0,3)) + '\tQ: ' + str(round(q,2)) + '\n\n' + 'v1: ' + str(round(v1,3)) + '\tsigma1: ' + str(round(sigma1,3)) + '\tBER: ' + str(ber)
-    self.resultados_label.setText(string) #Esto no esta funcionando. medice que no hay atributo resultados_label en diagrama de ojo
+  def muestra_resultados(self, v0, sigma0, v1, sigma1, q, ber, num0, num1):
+    string = 'v0: ' + str(round(v0,3)) + '\tsigma0: ' + str(round(sigma0,3)) + '\tnumero de muestras0: ' + str(num0) + '\tQ: ' + str(round(q,2)) + '\n\n' + 'v1: ' + str(round(v1,3)) + '\tsigma1: ' + str(round(sigma1,3)) + '\tnumero de muestras1: ' + str(num1) + '\tBER: ' + '%.2e' % ber
+    self.resultados_label.setText(string)
 
 '''
 def main():
