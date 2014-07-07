@@ -697,9 +697,9 @@ class DispFreq(QtGui.QWidget):
     T1 = n1*inc_tiempo1
     frq1 = k1/T1
     frq1 = frq1[range(n1/2)]
-    fft1 = np.fft.fft(lista_medidas1, 65536)/n1 # FFT normalizada
-    fft1 = fft1[range(n1/2)] 
-    ax1.plot(frq1, abs(fft1), 'y')
+    fft1 = np.fft.fft(lista_medidas1)/n1 #65536)/n1 # FFT normalizada
+    fft1 = fft1[range(n1/2)]
+    ax1.semilogx(frq1, abs(fft1), 'y')
     ax1.set_xlabel('Freq')
     ax1.set_ylabel('|Y(freq)|')
     ax1.xaxis.set_major_formatter(formatter_freq)
@@ -710,9 +710,9 @@ class DispFreq(QtGui.QWidget):
     T2 = n2*inc_tiempo2
     frq2 = k2/T2
     frq2 = frq2[range(n2/2)]
-    fft2 = np.fft.fft(lista_medidas2, 65536)/n2 # FFT normalizada
+    fft2 = np.fft.fft(lista_medidas2)/n2 # FFT normalizada
     fft2 = fft2[range(n2/2)] 
-    ax2.plot(frq2, abs(fft2), 'b')
+    ax2.semilogx(frq2, abs(fft2), 'b')
     ax2.set_xlabel('Freq')
     ax2.set_ylabel('|Y(freq)|')
     ax2.xaxis.set_major_formatter(formatter_freq)
