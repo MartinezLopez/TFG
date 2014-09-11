@@ -5,6 +5,39 @@ from PySide import QtGui, QtCore
 from Osciloscopio import *
 from Display import *
 
+class VentanaPrincipal(QtGui.QWidget):
+  global osc
+  
+  def __init__(self, osciloscopio):
+    super(VentanaPrincipal, self).__init__()
+    self.osc = osciloscopio
+    grid = QtGui.QGridLayout()
+    grid.setSpacing(5)
+    
+    bot_osciloscopio = QtGui.QPushButton('Osciloscopio', self)
+    bot_med_pot = QtGui.QPushButton('Medidor de potencia optica', self) #Tilde
+    bot_salir = QtGui.QPushButton('Salir', self)
+    
+    grid.addWidget(bot_osciloscopio, 1, 1)
+    grid.addWidget(bot_med_pot, 1, 2)
+    grid.addWidget(bot_salir, 2, 2)
+    
+    bot_salir.clicked.connect(QtCore.QCoreApplication.instance().quit)
+    bot_osciloscopio.clicked.connect(lambda: self.init_ventana_osc())
+    bot_med_pot.clicked.connect(lambda: self.init_ventana_pot())
+    
+    self.setLayout(grid)        
+    self.setGeometry(100, 100, 500, 500)
+    self.setWindowTitle('Configuracion de osciloscopio')
+    self.showMaximized()
+    
+  def init_ventana_osc(self):
+    v = VentanaConfiguracion(self.osc)
+  
+  def init_ventana_pot(self):
+    print 'medidor de potencia'
+    #v = VentanaMedidorPotencia()
+
 class VentanaConfiguracion(QtGui.QWidget):
   global osc
     
@@ -143,7 +176,7 @@ class VentanaConfiguracion(QtGui.QWidget):
     grid.addWidget(bot_medidas, 4, 5)
     grid.addWidget(bot_cerrar, 4, 6)
     
-    bot_cerrar.clicked.connect(QtCore.QCoreApplication.instance().quit)
+    bot_cerrar.clicked.connect(self.close)
     bot_aceptar.clicked.connect(lambda: self.aceptar_conf(desp_tiempo.currentText(), desp_disp.currentText(), ch1.isChecked(), desp_vdiv1.currentText(), desp_acop1.currentText(), desp_att1.currentText(), ch2.isChecked(), desp_vdiv2.currentText(), desp_acop2.currentText(), desp_att2.currentText()))
     bot_medir.clicked.connect(lambda: self.medida(ch1.isChecked(), ch2.isChecked()))
     bot_medidas.clicked.connect(lambda: self.medidas())
@@ -322,7 +355,7 @@ class VentanaMedidas(QtGui.QWidget):
     
     grid.addWidget(bot_cerrar, 11, 4)
     
-    bot_cerrar.clicked.connect(lambda: self.cerrar())
+    bot_cerrar.clicked.connect(self.close)
     
     ch1_freq_button.clicked.connect(lambda: self.actualizar('1','frecuencia'))
     ch1_per_button.clicked.connect(lambda: self.actualizar('1','periodo'))
@@ -349,8 +382,6 @@ class VentanaMedidas(QtGui.QWidget):
     self.setWindowTitle('Medidas')
     self.showMaximized()
   
-  def cerrar(self):
-    self.close()
   
   def actualizar(self, canal, medida):
     channel1= {"frecuencia":self.ch1_freq_label, "periodo":self.ch1_per_label, "vmedio":self.ch1_vmedio_label, "vpp":self.ch1_vpp_label, "vrms":self.ch1_vrms_label, "vmin":self.ch1_vmin_label, "vmax":self.ch1_vmax_label, "tsubida":self.ch1_tsubida_label, "tbajada":self.ch1_tbajada_label}
