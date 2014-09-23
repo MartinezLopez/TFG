@@ -7,7 +7,7 @@ class Display:
   def pintar(self, lista_medidas1, inc_tiempo1, lista_medidas2, inc_tiempo2):
     '''Crea una ventana con el estilo de las de matlab, con matplotlib, para mostrar las dos senales representadas en el osciloscopio. Bloquea al resto de la aplicacion porque si no da problemas en la representacion de la ventana.
     
-    Representa las unidades con sus magnitudes en formato ingenieril. Para pintar las senales utiliza como datos del eje Y los valores que se le pasan en los argumentos lista_medidas y les asigna su posicion en el eje X segun el incremento de tiempo entre medidas que obtiene de los argumentos inc_tiempo y la posicion que ocupan en lista_medidas. 
+    Representa las unidades con sus magnitudes en formato ingenieril. Para pintar las senales utiliza como datos del eje Y los valores que se le pasan en los argumentos lista_medidas y les asigna su posicion en el eje X según el incremento de tiempo entre medidas que obtiene de los argumentos inc_tiempo y la posicion que ocupan en lista_medidas. 
     
     Parametros:
       lista_medidas1: Valores de amplitud de los puntos del canal 1.

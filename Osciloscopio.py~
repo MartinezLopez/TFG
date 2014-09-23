@@ -152,7 +152,7 @@ class Osciloscopio:
   
   def formatter(self, value):
     ''' Cambia un numero de notacion cientifica a notacion ingenieril, desde pico hasta tera.
-    Dependiendo del exponente asigna una letra para la magnitud de las unidades y multiplica por un valor de 1, 10 o 100 segun corresponda.
+    Dependiendo del exponente asigna una letra para la magnitud de las unidades y multiplica por un valor de 1, 10 o 100 según corresponda.
     
     Devuelve el numero con el nuevo formato.
     
