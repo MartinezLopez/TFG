@@ -29,7 +29,6 @@ def main():
   app = QtGui.QApplication(sys.argv)
   osc = Osciloscopio(osc_id)
   main_window = VentanaPrincipal(osc)
-  #win_measure = VentanaMedida(osc)
   sys.exit(app.exec_())
 
 if __name__ == '__main__':

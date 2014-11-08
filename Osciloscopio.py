@@ -25,6 +25,7 @@ class Osciloscopio:
     self.atenuacion = {"1":'1', "10":'10'} 
     self.bytes_medida = {"2":'2', "1":'1'}
     self.medidas = {"frecuencia":'FREQ', "periodo":'PERI', "vmedio":'MEAN', "vpp":'PK2', "vrms":'CRM', "vmin":'MINI', "vmax":'MAXI', "tsubida":'RIS', "tbajada":'FALL'}
+    self.canal_trigg = {"1":'CH1', "2":'CH2', "ext":'EXT', "ext5":'EXT5'}
     
     # Inicializamos el osciloscopio
     self.ins = usbtmc.Instrument("USB::" + id + "::INSTR")
@@ -50,6 +51,18 @@ class Osciloscopio:
     '''
     escala = self.sec_div[tiempo]
     self.ins.write("HOR:SCA " + escala)
+  
+  def set_trigger(self, channel, level):
+    '''Configura el nivel y modo de disparo.
+    
+    Parametros:
+      channel: valor valido del diccionario canal_trigg.
+      level: nivel del disparo en voltios.
+    
+    '''
+    ch = self.canal_trigg[channel]
+    
+    self.ins.write("TRIG:MAI:LEV " + str(level) + ";EDGE:SOU " + ch)
   
   def set_vertical(self, channel, v_d, coupling, probe):
     '''Modifica los ajustes de amplitud, acoplamiento y atenuacion de la sonda de los diferentes canales del osciloscopio.
@@ -92,7 +105,8 @@ class Osciloscopio:
     prec = self.bytes_medida[width]
     self.ins.write("DAT:ENC " + codificacion +";SOU " + ch + ";STAR " + str(start) + ";STOP " + str(stop) + ";WID " + prec)
     
-    incremento_tiempo = float(self.ins.ask("HOR:MAI:SCA?"))/250 #*10divisiones/2500 puntos
+    puntos_division = 250 #2500 puntos / 10 divisiones
+    incremento_tiempo = float(self.ins.ask("HOR:MAI:SCA?")) / puntos_division
     v_div = float(self.ins.ask(ch + ":SCA?"))
     
     puntos = self.ins.ask_raw("CURV?")
@@ -251,16 +265,20 @@ class Osciloscopio:
     dot = num.find('.')
     num = num[0:(dot+prec)]
     num = num + ' ' + new_exp
+    if num == '9.9 E37':
+      num = 'Err '
     return num
     
 
 
-'''  
+'''
 def main(): 
   osc = Osciloscopio("0x0699::0x0369")
+  osc.set_trigger('1', 3.5)
   osc.set_vertical("1", "2v", "AC", "1")
   osc.set_horizontal('250us')
   print osc.get_data("1", 1, 150, '1')
+  
 
 if __name__ == '__main__':
   main()

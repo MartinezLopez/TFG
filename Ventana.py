@@ -4,6 +4,7 @@ import sys
 from PySide import QtGui, QtCore
 from Osciloscopio import *
 from Display import *
+from Modbus import *
 
 class VentanaPrincipal(QtGui.QWidget):
   global osc
@@ -35,7 +36,8 @@ class VentanaPrincipal(QtGui.QWidget):
     self.setLayout(grid)        
     self.setGeometry(100, 100, 500, 500)
     self.setWindowTitle('Laboratorio de Comunicaciones Opticas')
-    self.showMaximized()
+    #self.showMaximized()
+    self.show()
     
   def init_ventana_osc(self):
     '''Crea un objeto de la clase VentanaConfiguracion.
@@ -71,20 +73,24 @@ class VentanaConfiguracion(QtGui.QWidget):
     '''
     #Se crean los elementos de la ventana y se les anaden funcionalidades
     grid = QtGui.QGridLayout()
-    grid.setSpacing(5)
+    grid.setSpacing(3)
     
     bot_aceptar = QtGui.QPushButton('Configurar', self)
-    bot_medir = QtGui.QPushButton('Mostrar osciloscopio', self)
+    bot_medir = QtGui.QPushButton('Mostrar\nosciloscopio', self)
     bot_medidas = QtGui.QPushButton('Medidas', self)
+    bot_ojo = QtGui.QPushButton('Ver', self)
     bot_cerrar = QtGui.QPushButton('Cerrar', self)
+    
     tit_tiempo = QtGui.QLabel('Tiempo')
     tit_display = QtGui.QLabel('Modo del display')
     tit_vdiv1 = QtGui.QLabel('Voltios/division')
-    tit_acop1 = QtGui.QLabel('Modo de acoplamiento')
-    tit_att1 = QtGui.QLabel('Atenuacion de la sonda')
+    tit_acop1 = QtGui.QLabel('Modo de\nacoplamiento')
+    tit_att1 = QtGui.QLabel('Atenuacion de\nla sonda')
     tit_vdiv2 = QtGui.QLabel('Voltios/division')
-    tit_acop2 = QtGui.QLabel('Modo de acoplamiento')
-    tit_att2 = QtGui.QLabel('Atenuacion de la sonda')
+    tit_acop2 = QtGui.QLabel('Modo de\nacoplamiento')
+    tit_att2 = QtGui.QLabel('Atenuacion de\nla sonda')
+    tit_ojo = QtGui.QLabel('Diagrama\nde ojo')
+    tit_tbit = QtGui.QLabel('Tiempo de bit')
     
     ch1 = QtGui.QCheckBox('Canal 1', self)
     ch2 = QtGui.QCheckBox('Canal 2', self)
@@ -171,7 +177,47 @@ class VentanaConfiguracion(QtGui.QWidget):
     desp_att2.addItem("x1")
     desp_att2.addItem("x10")
     
-    grid.addWidget(tit_tiempo, 1, 1)
+    desp_ojo = QtGui.QComboBox(self)
+    desp_ojo.addItem("200 ns")
+    desp_ojo.addItem("50 ns")
+    desp_ojo.addItem("14.3 ns")
+    desp_ojo.addItem("6.67 ns")
+    
+    #grid.addWidget(widget, r, c, [num_r, num_c])
+    grid.addWidget(ch1, 1, 0)
+    grid.addWidget(tit_vdiv1, 1, 1)
+    grid.addWidget(desp_vdiv1, 1, 2)
+    grid.addWidget(tit_acop1, 1, 3)
+    grid.addWidget(desp_acop1, 1, 4)
+    grid.addWidget(tit_att1, 1, 5)
+    grid.addWidget(desp_att1, 1, 6)
+    
+    grid.addWidget(ch2, 2, 0)
+    grid.addWidget(tit_vdiv2, 2, 1)
+    grid.addWidget(desp_vdiv2, 2, 2)
+    grid.addWidget(tit_acop2, 2, 3)
+    grid.addWidget(desp_acop2, 2, 4)
+    grid.addWidget(tit_att2, 2, 5)
+    grid.addWidget(desp_att2, 2, 6)
+    
+    grid.addWidget(tit_tiempo, 3, 1)
+    grid.addWidget(desp_tiempo, 3, 2)
+    grid.addWidget(tit_display, 3, 4)
+    grid.addWidget(desp_disp, 3, 5)
+    
+    grid.addWidget(bot_aceptar, 4, 4)
+    grid.addWidget(bot_medir, 4, 5)
+    grid.addWidget(bot_medidas, 4, 6)
+    
+    grid.addWidget(tit_ojo, 6, 1)
+    grid.addWidget(tit_tbit, 6, 3)
+    grid.addWidget(desp_ojo, 6,4)
+    grid.addWidget(bot_ojo, 6, 6)
+    
+    grid.addWidget(bot_cerrar, 8, 5)
+    
+    #Por si hay que volver al grid anterior
+    '''grid.addWidget(tit_tiempo, 1, 1)
     grid.addWidget(desp_tiempo, 1, 2)
     grid.addWidget(tit_display, 1, 3)
     grid.addWidget(desp_disp, 1, 4)
@@ -192,20 +238,26 @@ class VentanaConfiguracion(QtGui.QWidget):
     grid.addWidget(tit_att2, 3, 5)
     grid.addWidget(desp_att2, 3, 6)
     
-    grid.addWidget(bot_aceptar, 4, 3)
-    grid.addWidget(bot_medir, 4, 4)
-    grid.addWidget(bot_medidas, 4, 5)
+    grid.addWidget(bot_aceptar, 4, 2)
+    grid.addWidget(bot_medir, 4, 3)
+    grid.addWidget(bot_medidas, 4, 4)
+    grid.addWidget(bot_ojo, 4, 5)
     grid.addWidget(bot_cerrar, 4, 6)
+    grid.addWidget(tit_ojo, 6, 1)
+    grid.addWidget(tit_tbit, 6, 3)
+    grid.addWidget(desp_ojo, 6,4)
+    #grid.addWidget(bot_ojo, 6, 6)'''
     
     bot_cerrar.clicked.connect(self.close)
     bot_aceptar.clicked.connect(lambda: self.aceptar_conf(desp_tiempo.currentText(), desp_disp.currentText(), ch1.isChecked(), desp_vdiv1.currentText(), desp_acop1.currentText(), desp_att1.currentText(), ch2.isChecked(), desp_vdiv2.currentText(), desp_acop2.currentText(), desp_att2.currentText()))
     bot_medir.clicked.connect(lambda: self.medida(ch1.isChecked(), ch2.isChecked()))
     bot_medidas.clicked.connect(lambda: self.medidas())
+    bot_ojo.clicked.connect(lambda: self.diagramaOjo(desp_ojo.currentText()))
     self.setLayout(grid)
         
     self.setGeometry(100, 100, 500, 500)
-    self.setWindowTitle('Configuracion de osciloscopio')
-    self.showMaximized()
+    self.setWindowTitle('Osciloscopio')
+    self.show()
   
   def aceptar_conf(self, t, display, ch1, vdiv1, acop1, att1, ch2, vdiv2, acop2, att2):
     '''Configura el osciloscopio con los valores que se han seleccionado en la ventana.
@@ -263,6 +315,27 @@ class VentanaConfiguracion(QtGui.QWidget):
     plot = Display()
     plot.pintar(medida1, tiempo1, medida2, tiempo2)
     self.show()
+  
+  def diagramaOjo(self, t_bit):
+    '''Crea on objeto de la clase Display en el que representa el diagrama de ojo del canal 1.
+    
+    '''
+    tiempos_bit = {"200 ns":0x00, "50 ns":0x01, "14.3 ns":0x02, "6.67 ns":0x03}
+    base_tiempos = {"200 ns":'50ns', "50 ns":'25ns', "14.3 ns":'5ns', "6.67 ns":'2.5ns'}
+    # Configuramos base de tiempos
+    self.osc.set_horizontal(base_tiempos[t_bit])
+    # Llamada a modbus
+    mb = Modbus()
+    mb.write_registers(0x02, 1, [tiempos_bit[t_bit]]) #direccion, primer registro, datos
+    # Configuramos el disparo
+    self.osc.set_trigger('ext5', 0)
+    aviso = VentanaInfo('El proceso de adquisicion de datos puede llevar algun tiempo\nPor favor, pulse el boton Aceptar y espere')
+    self.hide()
+    plot = DisplayOjo()
+    plot.pintar(self.osc)
+    self.show()
+    # Quitamos el diparo externo
+    self.osc.set_trigger('1', 0)
   
   def medidas(self):
     '''Crea un objeto de la clase VentanaMedidas.
@@ -430,7 +503,7 @@ class VentanaMedidas(QtGui.QWidget):
     self.setGeometry(100, 100, 500, 500)
     self.setLayout(grid)
     self.setWindowTitle('Medidas')
-    self.showMaximized()
+    self.show()
   
   
   def actualizar(self, canal, medida):
@@ -450,11 +523,29 @@ class VentanaMedidas(QtGui.QWidget):
     else:
       channel2[medida].setText(valor_medida)
     self.update()
-    
 
-'''def main():
+
+class VentanaInfo(QtGui.QWidget):
+  
+  def __init__(self, texto):
+    '''Constructor de una ventana de informacion
+    
+    Parametros:
+      texto: Texto que mostrar'a la ventana
+    
+    '''
+    super(VentanaInfo, self).__init__()
+    self.inicializa(texto)
+  
+  def inicializa(self, texto):
+    win = QtGui.QMessageBox()
+    win.setInformativeText(texto)
+    win.exec_()
+
+'''
+def main():
   app = QtGui.QApplication(sys.argv) 
-  win = VentanaMedidas([0,1,2,3,4,5,6,7,8],[0,1,2,3,4,5,6,7,8])
+  win = VentanaInfo()
   sys.exit(app.exec_())
 
 if __name__ == '__main__':
