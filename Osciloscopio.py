@@ -1,8 +1,9 @@
 #!/usr/bin/python
 
 import usbtmc
-from struct import unpack
 import time
+from struct import unpack
+from Ventana import VentanaInfo
 
 class Osciloscopio:
     
@@ -28,7 +29,10 @@ class Osciloscopio:
     self.canal_trigg = {"1":'CH1', "2":'CH2', "ext":'EXT', "ext5":'EXT5'}
     
     # Inicializamos el osciloscopio
-    self.ins = usbtmc.Instrument("USB::" + id + "::INSTR")
+    try:
+      self.ins = usbtmc.Instrument("USB::" + id + "::INSTR")
+    except ValueError:
+      aviso = VentanaInfo("Parece que no hay ningun osciloscopio conectado. Por favor conectelo y asegurese de que esta encendido y reinicie la aplicacion.")
 
   def set_display(self, mode):
     '''Permite elegir entre modo de visualizacion XY o YT.
@@ -96,34 +100,51 @@ class Osciloscopio:
       width: Precision de la medida, 1 o 2 bytes. Uno por defecto.
     
     '''
-    codificacion = "RIB" #Entre 127 y -128 con un byte
-    ch = self.canal[source]
-    if start < 1:
-      start = 1
-    if stop > 2500:
-      stop = 2500
-    prec = self.bytes_medida[width]
-    self.ins.write("DAT:ENC " + codificacion +";SOU " + ch + ";STAR " + str(start) + ";STOP " + str(stop) + ";WID " + prec)
-    
-    puntos_division = 250 #2500 puntos / 10 divisiones
-    incremento_tiempo = float(self.ins.ask("HOR:MAI:SCA?")) / puntos_division
-    v_div = float(self.ins.ask(ch + ":SCA?"))
-    
-    puntos = self.ins.ask_raw("CURV?")
-    header_length = 2 + int(puntos[1]) #Calculamos el tamano de la cabecera para no cogerla
-    puntos = puntos[header_length:-1]
-    puntos = unpack('%sb' % len(puntos), puntos) #Los convertimos desde enteros con signo
-    
-    if prec == '2': #Si la resolucion no es dos la consideramos uno
-      escala = 6553.4 #32767/5
-    else:
-      escala = 25.4 #127/5
-    
-    tension =[]
-    for dato in puntos:
-      dato = dato*v_div/escala
-      tension.append(dato)
-    return tension, incremento_tiempo
+    intentos = 0
+    while intentos < 5:
+      try: # Es un manejo de la excepcion un poco largo, pero al haber varias llamadas parecidas puede fallar cualquiera y hay veces que no te das cuenta del fallo hasta el procesado de datos que hace al final
+        codificacion = "RIB" #Entre 127 y -128 con un byte
+        ch = self.canal[source]
+        if start < 1:
+          start = 1
+        if stop > 2500:
+          stop = 2500
+        prec = self.bytes_medida[width]
+        self.ins.write("DAT:ENC " + codificacion +";SOU " + ch + ";STAR " + str(start) + ";STOP " + str(stop) + ";WID " + prec)
+        
+        puntos_division = 250 #2500 puntos / 10 divisiones
+        incremento_tiempo = float(self.ins.ask("HOR:MAI:SCA?")) / puntos_division
+        v_div = float(self.ins.ask(ch + ":SCA?"))
+        
+        puntos = self.ins.ask_raw("CURV?")
+        header_length = 2 + int(puntos[1]) #Calculamos el tamano de la cabecera para no cogerla
+        puntos = puntos[header_length:-1]
+        puntos = unpack('%sb' % len(puntos), puntos) #Los convertimos desde enteros con signo
+        
+        if prec == '2': #Si la resolucion no es dos la consideramos uno
+          escala = 6553.4 #32767/5
+        else:
+          escala = 25.4 #127/5
+        
+        tension =[]
+        for dato in puntos:
+          dato = dato*v_div/escala
+          tension.append(dato)
+        return tension, incremento_tiempo
+      
+      except Exception as e:
+        print('Excepcion')
+        print e
+        intentos += 1
+      '''except usbtmc.usb.core.USBError:
+        print 'USBError'
+        get_data(source, start, stop, width)
+      except ValueError:
+        print 'ValueError'
+        get_data(source, start, stop, width)
+      except UnicodeDecodeError:
+        print 'UnicodeError'
+        get_data(source, start, stop, width)'''
   
   def disp_channel(self, state, channel):
     ''' Muestra u oculta los canales en el display del osciloscopio. 

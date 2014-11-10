@@ -36,6 +36,7 @@ class VentanaPrincipal(QtGui.QWidget):
     self.setLayout(grid)        
     self.setGeometry(100, 100, 500, 500)
     self.setWindowTitle('Laboratorio de Comunicaciones Opticas')
+    self.setWindowIcon(QtGui.QIcon('img/icono.gif'))
     #self.showMaximized()
     self.show()
     
@@ -257,6 +258,7 @@ class VentanaConfiguracion(QtGui.QWidget):
         
     self.setGeometry(100, 100, 500, 500)
     self.setWindowTitle('Osciloscopio')
+    self.setWindowIcon(QtGui.QIcon('img/icono.gif'))
     self.show()
   
   def aceptar_conf(self, t, display, ch1, vdiv1, acop1, att1, ch2, vdiv2, acop2, att2):
@@ -301,11 +303,13 @@ class VentanaConfiguracion(QtGui.QWidget):
     '''
     #Si los canales estan seleccionados se cogen sus datos, si no se dejan a cero
     if(ch1):
+      self.osc.disp_channel(True, '1')
       medida1, tiempo1 = self.osc.get_data('1', 1, 2500, '1')
     else:
       medida1 = []
       tiempo1 = []
     if(ch2):
+      self.osc.disp_channel(True, '2')
       medida2, tiempo2 = self.osc.get_data('2', 1, 2500, '1')
     else:
       medida2 = []
@@ -322,8 +326,9 @@ class VentanaConfiguracion(QtGui.QWidget):
     '''
     tiempos_bit = {"200 ns":0x00, "50 ns":0x01, "14.3 ns":0x02, "6.67 ns":0x03}
     base_tiempos = {"200 ns":'50ns', "50 ns":'25ns', "14.3 ns":'5ns', "6.67 ns":'2.5ns'}
-    # Configuramos base de tiempos
+    # Configuramos base de tiempos y amplitud
     self.osc.set_horizontal(base_tiempos[t_bit])
+    self.osc.set_vertical("1", "2v", "AC", "1")
     # Llamada a modbus
     mb = Modbus()
     mb.write_registers(0x02, 1, [tiempos_bit[t_bit]]) #direccion, primer registro, datos
@@ -503,6 +508,7 @@ class VentanaMedidas(QtGui.QWidget):
     self.setGeometry(100, 100, 500, 500)
     self.setLayout(grid)
     self.setWindowTitle('Medidas')
+    self.setWindowIcon(QtGui.QIcon('img/icono.gif'))
     self.show()
   
   
@@ -540,6 +546,7 @@ class VentanaInfo(QtGui.QWidget):
   def inicializa(self, texto):
     win = QtGui.QMessageBox()
     win.setInformativeText(texto)
+    win.setWindowIcon(QtGui.QIcon('img/icono.gif'))
     win.exec_()
 
 '''

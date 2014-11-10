@@ -5,8 +5,9 @@ import math
 import pylab
 from scipy.special import erfc
 from matplotlib.ticker import EngFormatter, MultipleLocator
-from matplotlib.widgets import Cursor, Slider, RadioButtons
+from matplotlib.widgets import Cursor, Slider
 from matplotlib.patches import Rectangle
+from Tkinter import PhotoImage
 
 class Display:
   
@@ -39,6 +40,8 @@ class Display:
     # Creamos dos subplots
     fig, (ax1, ax2) = plt.subplots(2, 1)
     mng = plt.get_current_fig_manager() # Maximizamos la ventana (TkAgg backend)
+    icono = PhotoImage(file='img/icono.gif')
+    mng.window.tk.call('wm', 'iconphoto', mng.window._w, icono)
     mng.resize(*mng.window.maxsize())
     
     # Representamos el canal 1
@@ -96,6 +99,8 @@ class DisplayOjo:
     
     plt.subplots_adjust(left=0.25, right=0.9, bottom=0.05, top=0.95, hspace=0.25)#top=1, bottom=0.55)
     mng = plt.get_current_fig_manager() # Maximizamos la ventana (TkAgg backend)
+    icono = PhotoImage(file='img/icono.gif')
+    mng.window.tk.call('wm', 'iconphoto', mng.window._w, icono)
     mng.resize(*mng.window.maxsize())
     
     # Representamos el diagrama
