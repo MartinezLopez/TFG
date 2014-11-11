@@ -36,7 +36,7 @@ class VentanaPrincipal(QtGui.QWidget):
     self.setLayout(grid)        
     self.setGeometry(100, 100, 500, 500)
     self.setWindowTitle('Laboratorio de Comunicaciones Opticas')
-    self.setWindowIcon(QtGui.QIcon('img/icono.gif'))
+    self.setWindowIcon(QtGui.QIcon('/home/debian/Desktop/Aplicacion/img/icono.gif'))
     #self.showMaximized()
     self.show()
     
@@ -74,7 +74,7 @@ class VentanaConfiguracion(QtGui.QWidget):
     '''
     #Se crean los elementos de la ventana y se les anaden funcionalidades
     grid = QtGui.QGridLayout()
-    grid.setSpacing(3)
+    grid.setSpacing(5)
     
     bot_aceptar = QtGui.QPushButton('Configurar', self)
     bot_medir = QtGui.QPushButton('Mostrar\nosciloscopio', self)
@@ -82,19 +82,19 @@ class VentanaConfiguracion(QtGui.QWidget):
     bot_ojo = QtGui.QPushButton('Ver', self)
     bot_cerrar = QtGui.QPushButton('Cerrar', self)
     
-    tit_tiempo = QtGui.QLabel('Tiempo')
+    tit_tiempo = QtGui.QLabel('Base de\ntiempos')
     tit_display = QtGui.QLabel('Modo del display')
-    tit_vdiv1 = QtGui.QLabel('Voltios/division')
-    tit_acop1 = QtGui.QLabel('Modo de\nacoplamiento')
+    tit_vdiv1 = QtGui.QLabel('V/div')
+    tit_acop1 = QtGui.QLabel('Coupling')
     tit_att1 = QtGui.QLabel('Atenuacion de\nla sonda')
-    tit_vdiv2 = QtGui.QLabel('Voltios/division')
-    tit_acop2 = QtGui.QLabel('Modo de\nacoplamiento')
+    tit_vdiv2 = QtGui.QLabel('V/div')
+    tit_acop2 = QtGui.QLabel('Coupling')
     tit_att2 = QtGui.QLabel('Atenuacion de\nla sonda')
     tit_ojo = QtGui.QLabel('Diagrama\nde ojo')
-    tit_tbit = QtGui.QLabel('Tiempo de bit')
+    tit_tbit = QtGui.QLabel('Tiempo de\nbit')
     
-    ch1 = QtGui.QCheckBox('Canal 1', self)
-    ch2 = QtGui.QCheckBox('Canal 2', self)
+    ch1 = QtGui.QCheckBox('Ch 1', self)
+    ch2 = QtGui.QCheckBox('Ch 2', self)
     
     desp_tiempo = QtGui.QComboBox(self)
     desp_tiempo.addItem("100ms")
@@ -258,7 +258,7 @@ class VentanaConfiguracion(QtGui.QWidget):
         
     self.setGeometry(100, 100, 500, 500)
     self.setWindowTitle('Osciloscopio')
-    self.setWindowIcon(QtGui.QIcon('img/icono.gif'))
+    self.setWindowIcon(QtGui.QIcon('/home/debian/Desktop/Aplicacion/img/icono.gif'))
     self.show()
   
   def aceptar_conf(self, t, display, ch1, vdiv1, acop1, att1, ch2, vdiv2, acop2, att2):
@@ -328,13 +328,13 @@ class VentanaConfiguracion(QtGui.QWidget):
     base_tiempos = {"200 ns":'50ns', "50 ns":'25ns', "14.3 ns":'5ns', "6.67 ns":'2.5ns'}
     # Configuramos base de tiempos y amplitud
     self.osc.set_horizontal(base_tiempos[t_bit])
-    self.osc.set_vertical("1", "2v", "AC", "1")
+    self.osc.set_vertical("1", "20mv", "AC", "1")
     # Llamada a modbus
     mb = Modbus()
     mb.write_registers(0x02, 1, [tiempos_bit[t_bit]]) #direccion, primer registro, datos
     # Configuramos el disparo
-    self.osc.set_trigger('ext5', 0)
-    aviso = VentanaInfo('El proceso de adquisicion de datos puede llevar algun tiempo\nPor favor, pulse el boton Aceptar y espere')
+    self.osc.set_trigger('ext', 0)
+    aviso = VentanaInfo('El proceso de adquisicion de datos puede llevar algun tiempo.\nPor favor, pulse el boton Aceptar y espere.')
     self.hide()
     plot = DisplayOjo()
     plot.pintar(self.osc)
@@ -508,7 +508,7 @@ class VentanaMedidas(QtGui.QWidget):
     self.setGeometry(100, 100, 500, 500)
     self.setLayout(grid)
     self.setWindowTitle('Medidas')
-    self.setWindowIcon(QtGui.QIcon('img/icono.gif'))
+    self.setWindowIcon(QtGui.QIcon('/home/debian/Desktop/Aplicacion/img/icono.gif'))
     self.show()
   
   
@@ -546,7 +546,7 @@ class VentanaInfo(QtGui.QWidget):
   def inicializa(self, texto):
     win = QtGui.QMessageBox()
     win.setInformativeText(texto)
-    win.setWindowIcon(QtGui.QIcon('img/icono.gif'))
+    win.setWindowIcon(QtGui.QIcon('/home/debian/Desktop/Aplicacion/img/icono.gif'))
     win.exec_()
 
 '''

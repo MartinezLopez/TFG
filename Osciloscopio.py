@@ -101,7 +101,7 @@ class Osciloscopio:
     
     '''
     intentos = 0
-    while intentos < 5:
+    while intentos < 8:
       try: # Es un manejo de la excepcion un poco largo, pero al haber varias llamadas parecidas puede fallar cualquiera y hay veces que no te das cuenta del fallo hasta el procesado de datos que hace al final
         codificacion = "RIB" #Entre 127 y -128 con un byte
         ch = self.canal[source]

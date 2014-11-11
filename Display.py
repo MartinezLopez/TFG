@@ -40,7 +40,7 @@ class Display:
     # Creamos dos subplots
     fig, (ax1, ax2) = plt.subplots(2, 1)
     mng = plt.get_current_fig_manager() # Maximizamos la ventana (TkAgg backend)
-    icono = PhotoImage(file='img/icono.gif')
+    icono = PhotoImage(file='/home/debian/Desktop/Aplicacion/img/icono.gif')
     mng.window.tk.call('wm', 'iconphoto', mng.window._w, icono)
     mng.resize(*mng.window.maxsize())
     
@@ -99,7 +99,7 @@ class DisplayOjo:
     
     plt.subplots_adjust(left=0.25, right=0.9, bottom=0.05, top=0.95, hspace=0.25)#top=1, bottom=0.55)
     mng = plt.get_current_fig_manager() # Maximizamos la ventana (TkAgg backend)
-    icono = PhotoImage(file='img/icono.gif')
+    icono = PhotoImage(file='/home/debian/Desktop/Aplicacion/img/icono.gif')
     mng.window.tk.call('wm', 'iconphoto', mng.window._w, icono)
     mng.resize(*mng.window.maxsize())
     
@@ -137,7 +137,7 @@ class DisplayOjo:
     
     # Barra de umbral de decision en los subplots 2 y 3
     barDecision2 = ax2.axvline(x=umbralInit, color='blue')
-    barDecision3 = ax3.axvline(x=umbralInit, color='blue')
+    #barDecision3 = ax3.axvline(x=umbralInit, color='blue')
     
     # Creamos el rectangulo donde vamos a poner el texto y sus ejes
     axtexto = plt.axes([0.025, 0.6, 0.15, 0.15])
@@ -156,7 +156,7 @@ class DisplayOjo:
     def updateSliderUmbral(val):
       barUmbral.set_ydata(sliderUmbral.val)
       barDecision2.set_xdata(sliderUmbral.val)
-      barDecision3.set_xdata(sliderUmbral.val)
+      #barDecision3.set_xdata(sliderUmbral.val)
     
     sliderUmbral.on_changed(updateSliderUmbral)
     sliderMuestreo.on_changed(updateSliderMuestra) #Son dos diferentes porque era un horror pedir muestras nuevas al mover el umbral
@@ -197,24 +197,34 @@ class DisplayOjo:
       gauss1 = pylab.normpdf(bins, v1, sigma1)
       ax2.plot(bins, gauss1, linewidth=2, color='#8a0808')#rojo
       
+      # Calculamos la ber
+      q = math.fabs(v1-v0)/(sigma1+sigma0)
+      ber = 0.5*erfc(q/math.sqrt(2))
+      axtexto.cla()
+      axtexto.text(0.05,0.15, r'$v_0$' + ': ' + str(round(v0,3)) + '\n' + r'$v_1$' + ': ' + str(round(v1,3)) + '\n' + r'$\sigma_0$' + ': ' + str(round(sigma0,3)) + '\n' + r'$\sigma_1$' + ': ' + str(round(sigma1,3)) + '\n' + 'Q: ' + str(round(q,2)) +'\n' + 'BER: ' + str(ber) + '\n')
+      
       # Pintamos las erfc
       paso = ((5/4)*intervalo_amplitud[1] - (5/4)*intervalo_amplitud[0])/len(bins)
       eje = []
       for i in range(len(bins)):
         eje.append((paso * i) + ((5/4)*intervalo_amplitud[0]))
       
-      ax3.hold(False)
+      '''ax3.hold(False)
       ax3.plot(eje, erfc(gauss0), color='#08088a')
       ax3.hold(True)
       ax3.plot(eje, erfc(gauss1), color='#8a0808')
       ax3.add_line(barDecision3) # Vuelve a pintar la barra del umbral cuando se redibuja
-      
-      # Calculamos la ber
-      q = math.fabs(v1-v0)/(sigma1+sigma0)
-      ber = 0.5*erfc(q/math.sqrt(2))
-      axtexto.cla()
-      axtexto.text(0.05,0.15, r'$v_0$' + ': ' + str(round(v0,3)) + '\n' + r'$v_1$' + ': ' + str(round(v1,3)) + '\n' + r'$\sigma_0$' + ': ' + str(round(sigma0,3)) + '\n' + r'$\sigma_1$' + ': ' + str(round(sigma1,3)) + '\n' + 'Q: ' + str(round(q,2)) +'\n' + 'BER: ' + str(ber) + '\n')
-    
+      '''
+      #Pintamos la erfc
+      eje_x = np.arange(0, q, q/10)
+      bar_q = ax3.axvline(x=q, color='blue')
+      bar_ber = ax3.axvline(x=ber, color='blue')
+      ax3.hold(False)
+      ax3.plot(0.5*erfc(eje_x/math.sqrt(2)), color='#08088a')
+      ax3.hold(True)
+      ax3.add_line(bar_q)
+      ax3.add_line(bar_ber)
+      ax3.set_yscale('log')
     
     def media_y_varianza(data): 
       media = 0.0
