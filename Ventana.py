@@ -1,10 +1,23 @@
 #!/usr/bin/python
 
 import sys
-from PySide import QtGui, QtCore
+from PyQt4 import QtGui, QtCore
 from Osciloscopio import *
-from Display import *
+#from Display import *
 from Modbus import *
+import numpy as np
+import time
+import math
+import pylab
+from scipy.special import erfc
+
+import matplotlib
+from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
+import matplotlib.pyplot as plt
+from matplotlib.ticker import EngFormatter, MultipleLocator
+from matplotlib.widgets import Cursor, Slider
+from matplotlib.patches import Rectangle
 
 class VentanaPrincipal(QtGui.QWidget):
   global osc
@@ -217,38 +230,6 @@ class VentanaConfiguracion(QtGui.QWidget):
     
     grid.addWidget(bot_cerrar, 8, 5)
     
-    #Por si hay que volver al grid anterior
-    '''grid.addWidget(tit_tiempo, 1, 1)
-    grid.addWidget(desp_tiempo, 1, 2)
-    grid.addWidget(tit_display, 1, 3)
-    grid.addWidget(desp_disp, 1, 4)
-    
-    grid.addWidget(ch1, 2, 0)
-    grid.addWidget(tit_vdiv1, 2, 1)
-    grid.addWidget(desp_vdiv1, 2, 2)
-    grid.addWidget(tit_acop1, 2, 3)
-    grid.addWidget(desp_acop1, 2, 4)
-    grid.addWidget(tit_att1, 2, 5)
-    grid.addWidget(desp_att1, 2, 6)
-    
-    grid.addWidget(ch2, 3, 0)
-    grid.addWidget(tit_vdiv2, 3, 1)
-    grid.addWidget(desp_vdiv2, 3, 2)
-    grid.addWidget(tit_acop2, 3, 3)
-    grid.addWidget(desp_acop2, 3, 4)
-    grid.addWidget(tit_att2, 3, 5)
-    grid.addWidget(desp_att2, 3, 6)
-    
-    grid.addWidget(bot_aceptar, 4, 2)
-    grid.addWidget(bot_medir, 4, 3)
-    grid.addWidget(bot_medidas, 4, 4)
-    grid.addWidget(bot_ojo, 4, 5)
-    grid.addWidget(bot_cerrar, 4, 6)
-    grid.addWidget(tit_ojo, 6, 1)
-    grid.addWidget(tit_tbit, 6, 3)
-    grid.addWidget(desp_ojo, 6,4)
-    #grid.addWidget(bot_ojo, 6, 6)'''
-    
     bot_cerrar.clicked.connect(self.close)
     bot_aceptar.clicked.connect(lambda: self.aceptar_conf(desp_tiempo.currentText(), desp_disp.currentText(), ch1.isChecked(), desp_vdiv1.currentText(), desp_acop1.currentText(), desp_att1.currentText(), ch2.isChecked(), desp_vdiv2.currentText(), desp_acop2.currentText(), desp_att2.currentText()))
     bot_medir.clicked.connect(lambda: self.medida(ch1.isChecked(), ch2.isChecked()))
@@ -279,16 +260,16 @@ class VentanaConfiguracion(QtGui.QWidget):
     '''
     #Cuando se acepta, se envian las configuraciones al osciloscopio que se ha pasado como parametro
     self.osc.set_display(display)
-    self.osc.set_horizontal(t)
+    self.osc.set_horizontal(str(t))
     if(ch1):
       self.osc.disp_channel(True, '1')
-      self.osc.set_vertical('1', vdiv1, acop1, att1.strip('x'))
+      self.osc.set_vertical('1', str(vdiv1), str(acop1), str(att1).strip('x'))
     else:
       self.osc.disp_channel(False, '1')
     
     if(ch2):
       self.osc.disp_channel(True, '2')
-      self.osc.set_vertical('2', vdiv2, acop2, att2.strip('x'))
+      self.osc.set_vertical('2', str(vdiv2), str(acop2), str(att2).strip('x'))
     else:
       self.osc.disp_channel(False, '2')
   
@@ -314,39 +295,46 @@ class VentanaConfiguracion(QtGui.QWidget):
     else:
       medida2 = []
       tiempo2 = []
-    #Ocultamos la ventana de configuracion mientras mostramos los datos
-    self.hide()
-    plot = Display()
-    plot.pintar(medida1, tiempo1, medida2, tiempo2)
-    self.show()
+    
+    self.disp = Display(medida1, tiempo1, medida2, tiempo2)
+    self.disp.show()
   
   def diagramaOjo(self, t_bit):
     '''Crea on objeto de la clase Display en el que representa el diagrama de ojo del canal 1.
     
     '''
     tiempos_bit = {"200 ns":0x00, "50 ns":0x01, "14.3 ns":0x02, "6.67 ns":0x03}
-    base_tiempos = {"200 ns":'50ns', "50 ns":'25ns', "14.3 ns":'5ns', "6.67 ns":'2.5ns'}
+    base_tiempos = {"200 ns":'50ns', "50 ns":'10ns', "14.3 ns":'5ns', "6.67 ns":'2.5ns'}
+    
     # Configuramos base de tiempos y amplitud
-    self.osc.set_horizontal(base_tiempos[t_bit])
-    self.osc.set_vertical("1", "20mv", "AC", "1")
+    self.osc.set_horizontal(base_tiempos[str(t_bit)]) #Por los qstring de qt4
+    self.osc.set_vertical("1", "500mv", "AC", "1")
+    
     # Llamada a modbus
-    mb = Modbus()
-    mb.write_registers(0x02, 1, [tiempos_bit[t_bit]]) #direccion, primer registro, datos
+    #mb = Modbus()
+    #mb.write_registers(0x02, 1, [tiempos_bit[t_bit]]) #direccion, primer registro, datos
+    
     # Configuramos el disparo
     self.osc.set_trigger('ext', 0)
-    aviso = VentanaInfo('El proceso de adquisicion de datos puede llevar algun tiempo.\nPor favor, pulse el boton Aceptar y espere.')
-    self.hide()
-    plot = DisplayOjo()
-    plot.pintar(self.osc)
-    self.show()
-    # Quitamos el diparo externo
+    aviso = VentanaInfo('La adquisicion de datos puede tardar un tiempo.\nPulse el boton "Ok" y espere, por favor.')
+    lista_medidas = []
+    
+    # Toma 32 trazas del osciloscopio
+    for i in range(32):
+      medidas , inc_tiempo = self.osc.get_data('1', 500, 2000, '1')
+      lista_medidas.append(medidas)
+    
+    self.ojo = DisplayOjo(lista_medidas, inc_tiempo)
+    self.ojo.show()
+    
+    # Quitamos el disiparo externo
     self.osc.set_trigger('1', 0)
   
   def medidas(self):
     '''Crea un objeto de la clase VentanaMedidas.
     
     '''
-    #Llamar a una ventana nueva'''
+    #Llamar a una ventana nueva
     v = VentanaMedidas(self.osc)
 
 class VentanaMedidas(QtGui.QWidget):
@@ -532,6 +520,7 @@ class VentanaMedidas(QtGui.QWidget):
 
 
 class VentanaInfo(QtGui.QWidget):
+  '''Tiene un boton aceptar para volver al orden de ejecucion'''
   
   def __init__(self, texto):
     '''Constructor de una ventana de informacion
@@ -546,13 +535,307 @@ class VentanaInfo(QtGui.QWidget):
   def inicializa(self, texto):
     win = QtGui.QMessageBox()
     win.setInformativeText(texto)
+    win.setWindowTitle('Aviso')
     win.setWindowIcon(QtGui.QIcon('/home/debian/Desktop/Aplicacion/img/icono.gif'))
     win.exec_()
+
+class VentanaAviso(QtGui.QWidget):
+  '''No tiene boton'''
+  
+  def __init__(self, texto):
+    super(VentanaAviso, self).__init__()
+    self.inicializa(texto)
+  
+  def inicializa(self, texto):
+    #QtGui.QMessageBox.about(self, 'Aviso', texto)
+    grid = QtGui.QGridLayout()
+    grid.setSpacing(5)
+    
+    aviso = QtGui.QLabel(texto)
+    grid.addWidget(aviso, 1, 1)
+    
+    self.setLayout(grid) 
+    self.setGeometry(200, 200, 200, 200)
+    self.setWindowTitle('Aviso')
+    #self.setWindowIcon(QtGui.QIcon('/home/debian/Desktop/Aplicacion/img/icono.gif'))
+    self.show()
+  
+  def cerrar(self):
+    self.close
+    
+
+class Display(QtGui.QWidget):
+  
+  def __init__(self, lista_medidas1, inc_tiempo1, lista_medidas2, inc_tiempo2):
+    '''Crea una ventana con el estilo de las de matlab, con matplotlib, para mostrar las dos senales representadas en el osciloscopio. Bloquea al resto de la aplicacion porque si no da problemas en la representacion de la ventana.
+    
+    Representa las unidades con sus magnitudes en formato ingenieril. Para pintar las senales utiliza como datos del eje Y los valores que se le pasan en los argumentos lista_medidas y les asigna su posicion en el eje		 X segun el incremento de tiempo entre medidas que obtiene de los argumentos inc_tiempo y la posicion que ocupan en lista_medidas. 
+    
+    Parametros:
+      lista_medidas1: Valores de amplitud de los puntos del canal 1.
+      inc_tiempo1: Diferencia de tiempo entre medidas.
+      lista_medidas2: Valores de amplitud de los puntos del canal 2.
+      inc_tiempo2: Diferencia de tiempo entre medidas.
+    
+    '''
+    
+    super(Display, self).__init__()
+    
+    self.figure = plt.figure()
+    self.canvas = FigureCanvas(self.figure)
+    self.toolbar = NavigationToolbar(self.canvas, self)
+    layout = QtGui.QVBoxLayout()
+    layout.addWidget(self.toolbar)
+    layout.addWidget(self.canvas)
+    self.setLayout(layout)
+    self.setFixedSize(1600,900)
+    self.setWindowTitle('Osciloscopio')
+    self.setWindowIcon(QtGui.QIcon('/home/debian/Desktop/Aplicacion/img/icono.gif'))
+    self.plot(lista_medidas1, inc_tiempo1, lista_medidas2, inc_tiempo2)
+    
+    
+  def plot(self, lista_medidas1, inc_tiempo1, lista_medidas2, inc_tiempo2):
+    
+    # Creamos los formatos que van a mostrar las unidades que se pintan
+    formatter_tiempo = EngFormatter(unit='s', places=1)
+    formatter_amp = EngFormatter(unit='v', places=1)
+    lista_tiempo1 = []
+    lista_tiempo2 = []
+    # Sabemos la diferencia de tiempos entre medidas, asi que multiplicando la posicion
+    # de cada dato por el incremento de tiempo sabemos su posicion en el eje X
+    for i in range(len(lista_medidas1)):
+      lista_tiempo1.append(inc_tiempo1*i)
+
+    for i in range(len(lista_medidas2)):
+      lista_tiempo2.append(inc_tiempo2*i)
+    
+    
+    # Creamos dos subplots
+    #fig, (ax1, ax2) = plt.subplots(2, 1)
+    ax1 = self.figure.add_subplot(211)
+    ax2 = self.figure.add_subplot(212)
+    #mng = plt.get_current_fig_manager() # Maximizamos la ventana (TkAgg backend)
+    #icono = PhotoImage(file='/home/debian/Desktop/Aplicacion/img/icono.gif')
+    #mng.window.tk.call('wm', 'iconphoto', mng.window._w, icono)
+    #mng.resize(*mng.window.maxsize())
+    
+    # Representamos el canal 1
+    ax1.plot(lista_tiempo1, lista_medidas1, 'y')
+    ax1.set_xlabel('tiempo')
+    ax1.set_ylabel('amplitud')
+    ax1.xaxis.set_major_formatter(formatter_tiempo)
+    ax1.yaxis.set_major_formatter(formatter_amp)
+    cursor1 = Cursor(ax1)#, useblit=True)
+    
+    # Representamos el canal 2
+    ax2.plot(lista_tiempo2, lista_medidas2, 'c')
+    ax2.set_xlabel('tiempo')
+    ax2.set_ylabel('amplitud')
+    ax2.xaxis.set_major_formatter(formatter_tiempo)
+    ax2.yaxis.set_major_formatter(formatter_amp)
+    cursor2 = Cursor(ax2)#, useblit=True)
+    
+    self.canvas.update()
+    self.canvas.flush_events()
+
+
+class DisplayOjo(QtGui.QWidget):
+  
+  def __init__(self, medidas, tiempo):
+    super(DisplayOjo, self).__init__()
+    
+    self.setWindowTitle('Diagrama de ojo')
+    self.setWindowIcon(QtGui.QIcon('/home/debian/Desktop/Aplicacion/img/icono.gif'))
+    self.setFixedSize(1050,700)
+    
+    self.creaInterfaz(medidas, tiempo)
+  
+  def creaInterfaz(self, medidas, tiempo):
+    
+    self.figure = plt.figure()
+    self.canvas = FigureCanvas(self.figure)
+    self.canvas.setParent(self)
+    
+    # Creamos los plots
+    self.ax = plt.subplot2grid((2,2),(0,0), colspan=2) #Diagrama de ojo
+    self.ax2 = plt.subplot2grid((2,2),(1,0))           #Histogramas
+    self.ax3 = plt.subplot2grid((2,2),(1,1))           #erfc
+    plt.subplots_adjust(left=0.2, right=0.8, bottom=0.05, top=0.95, hspace=0.25)#top=1, bottom=0.55)
+    
+    # Hacemos las medidas disponibles para todo el objeto
+    self.lista_medidas = medidas
+    self.inc_tiempo = tiempo
+    
+    # Creamos los formatos que van a mostrar las unidades que se pintan
+    formatter_tiempo = EngFormatter(unit='s', places=1)
+    formatter_amp = EngFormatter(unit='v', places=1)
+    self.lista_tiempo = []
+    
+    # Sabemos la diferencia de tiempos entre medidas, asi que multiplicando la posicion
+    # de cada dato por el incremento de tiempo sabemos su posicion en el eje X
+    for i in range(len(self.lista_medidas[1])):
+      self.lista_tiempo.append(self.inc_tiempo*i)
+    
+    # Representamos el diagrama
+    self.ax.hold(True)
+    for i in range(len(self.lista_medidas)):
+      self.ax.plot(self.lista_tiempo, self.lista_medidas[i], 'y')
+    self.ax.hold(False)
+    self.ax.set_xlabel('tiempo')
+    self.ax.set_ylabel('amplitud')
+    self.ax.xaxis.set_major_formatter(formatter_tiempo)
+    self.ax.yaxis.set_major_formatter(formatter_amp)
+    self.ax.xaxis.set_minor_locator(MultipleLocator(self.inc_tiempo * 25))
+    self.ax.yaxis.set_minor_locator(MultipleLocator(0.5))
+    
+    # Etiquetas del plot con los histogramas
+    self.ax2.set_xlabel('amplitud')
+    self.ax2.hold(True)
+    
+    # Creamos las barras de muestreo y umbral
+    self.intervalo_amplitud = self.ax.yaxis.get_data_interval()
+    umbralInit = (self.intervalo_amplitud[0]+self.intervalo_amplitud[1])/2
+    muestreoInit = self.lista_tiempo[len(self.lista_tiempo)-1]/2
+
+    # Creamos las barras horizontales y verticales del subplot1
+    self.var = 25*self.inc_tiempo
+    self.barMuestreo = self.ax.axvline(x=muestreoInit, color='green')
+    self.barMuestreoMas = self.ax.axvline(x=muestreoInit + self.var, color='green', linestyle='--')
+    self.barMuestreoMenos = self.ax.axvline(x=muestreoInit - self.var, color='green', linestyle='--')
+    self.barUmbral = self.ax.axhline(y=umbralInit, color='blue')
+    
+    # Barra de umbral de decision en los subplots 2 y 3
+    self.barDecision2 = self.ax2.axvline(x=umbralInit, color='blue')
+    
+    # Esto hay que hacerlo antes de dibujar para que pueda poner los valores medios, q y la ber
+    self.resultados_label = QtGui.QLabel(self)
+    
+    # Pintamos el resto de subplots
+    self.dibuja(muestreoInit, umbralInit)
+    
+    # Barra de herramientas de matplotlib
+    self.mpl_toolbar = NavigationToolbar(self.canvas, self)
+    
+    self.box1 = QtGui.QLineEdit(self)
+    self.box2 = QtGui.QLineEdit(self)
+    self.muestreo_label = QtGui.QLabel('Punto de muestreo', self)
+    self.umbral_label = QtGui.QLabel('Umbral', self)
+    
+    self.boton = QtGui.QPushButton("Pintar", self)
+    self.connect(self.boton, QtCore.SIGNAL('clicked()'), self.botonClick)
+    
+    #self.resultados_label = QtGui.QLabel(self)
+    
+    hbox = QtGui.QHBoxLayout()
+    
+    for w in [self.muestreo_label, self.box1, self.umbral_label, self.box2, self.boton]:
+      hbox.addWidget(w)
+      hbox.setAlignment(w, QtCore.Qt.AlignVCenter)
+    
+    vbox = QtGui.QVBoxLayout()
+    vbox.addWidget(self.canvas)
+    vbox.addWidget(self.mpl_toolbar)
+    vbox.addWidget(self.resultados_label)
+    vbox.addLayout(hbox)
+    
+    self.setLayout(vbox)
+    
+  
+  def botonClick(self):
+    muestreo = int(self.box1.text()) # Cogemos los valores de los porcentajes como enteros de las cajas de texto
+    umbral = int(self.box2.text())
+    
+    if muestreo > 100: # Nos aseguramos de que estan entre cero y cien
+      muestreo = 100
+    if muestreo < 0:
+      muestreo = 0
+    muestreo = muestreo/100.0 # Los ponemos en tanto por uno y los convertimos a decimales
+    
+    if umbral > 100: # Nos aseguramos de que estan entre cero y cien
+      umbral = 100
+    if umbral < 0:
+      umbral = 0
+    umbral = umbral/100.0 # Los ponemos en tanto por uno y los convertimos a decimales
+    
+    # Calculamos con que valores corresponden los porcentajes
+    valMuestreo = (muestreo*self.lista_tiempo[len(self.lista_tiempo)-1])
+    valUmbral = ((self.intervalo_amplitud[1] - self.intervalo_amplitud[0]) * umbral) + self.intervalo_amplitud[0]
+        
+    self.dibuja(valMuestreo, valUmbral)
+  
+  def dibuja(self, muestreo, umbral):
+    puntoMuestreo = int(muestreo/self.inc_tiempo)
+    amp = []
+    
+    for i in range(len(self.lista_medidas)): # Guardamos los puntos entre mas y menos 25 posiciones del punto de muestreo de todas las tramas guardadas
+      for j in range(-25, 25):
+        try:
+          amp.append(self.lista_medidas[i][puntoMuestreo + j])
+        except IndexError:
+          print('oob')
+    
+    # Discriminamos segun el umbral
+    val0 = []
+    val1 = []
+    
+    for i in range(len(amp)):
+      if(amp[i] < umbral):
+        val0.append(amp[i])
+      else:
+        val1.append(amp[i])  
+    
+    # Pintamos los histogramas y las gaussianas
+    self.ax2.cla()
+    norm0, bins, patches = self.ax2.hist(val0, bins=200,range=[(5/4)*self.intervalo_amplitud[0], (5/4)*self.intervalo_amplitud[1]], normed=True, histtype='stepfilled', color='#ced8f6', rwidth=100)
+    
+    norm1, bins, patches = self.ax2.hist(val1, bins=200,range=[(5/4)*self.intervalo_amplitud[0], (5/4)*self.intervalo_amplitud[1]], normed=True, histtype='stepfilled', color='#f5a9a9', rwidth=100)
+    
+    v0, sigma0 = self.media_y_varianza(val0)
+    gauss0 = pylab.normpdf(bins, v0, sigma0)
+    self.ax2.plot(bins, gauss0, linewidth=2, color='#08088a')#azul
+    
+    v1, sigma1 = self.media_y_varianza(val1)
+    gauss1 = pylab.normpdf(bins, v1, sigma1)
+    self.ax2.plot(bins, gauss1, linewidth=2, color='#8a0808')#rojo
+    
+    # Calculamos la ber
+    q = math.fabs(v1-v0)/(sigma1+sigma0)
+    ber = 0.5*erfc(q/math.sqrt(2))
+    
+    self.muestra_resultados(v0, sigma0, v1, sigma1, q, ber)
+    #string = 'v0:' + str(round(v0,3)) + '   sigma0:' + str(round(sigma0,3)) + '   Q: ' + str(round(q,2)) + '\n' + 'v1:' + str(round(v1,3)) + '   sigma1:' + str(round(sigma1,3)) + '   BER: ' + str(ber)
+    #self.resultados_label.setText(string)
+    
+    # Recolocamos todas las barras
+    self.ax2.add_line(self.barDecision2) # Vuelve a pintar la barra del umbral cuando se redibuja #aqui hay algo que no le sienta bien
+    self.barMuestreo.set_xdata(muestreo)
+    self.barMuestreoMas.set_xdata(muestreo + self.var)
+    self.barMuestreoMenos.set_xdata(muestreo - self.var)
+    self.barUmbral.set_ydata(umbral)
+    self.barDecision2.set_xdata(umbral)
+    
+    self.canvas.draw()
+  
+  def media_y_varianza(self, data): 
+    media = 0.0
+    var = 0.0
+    n = len(data)
+    for i in range(n):
+      media = media + data[i]
+    media = media/n
+    for i in range(n):
+      var = var + math.pow(media - data[i], 2)
+    var = math.sqrt(var / (n-1))
+    return media, var
+  
+  def muestra_resultados(self, v0, sigma0, v1, sigma1, q, ber):
+    string = 'v0: ' + str(round(v0,3)) + '\tsigma0: ' + str(round(sigma0,3)) + '\tQ: ' + str(round(q,2)) + '\n\n' + 'v1: ' + str(round(v1,3)) + '\tsigma1: ' + str(round(sigma1,3)) + '\tBER: ' + str(ber)
+    self.resultados_label.setText(string) #Esto no esta funcionando. medice que no hay atributo resultados_label en diagrama de ojo
 
 '''
 def main():
   app = QtGui.QApplication(sys.argv) 
-  win = VentanaInfo()
+  win = Display([1,2,3,4],1,[1,2,3,4],1)
   sys.exit(app.exec_())
 
 if __name__ == '__main__':
