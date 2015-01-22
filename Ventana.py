@@ -27,8 +27,8 @@ class VentanaPrincipal(QtGui.QWidget):
     
     Parametros:
       osciloscopio: Objeto de la clase Osciloscopio
+    
     '''
-
     super(VentanaPrincipal, self).__init__()
     self.osc = osciloscopio
     grid = QtGui.QGridLayout()
@@ -54,43 +54,37 @@ class VentanaPrincipal(QtGui.QWidget):
     self.show()
     
   def init_ventana_osc(self):
+    '''Crea un objeto de la clase VentanaConfiguracion.
+    
     '''
-    Crea un objeto de la clase VentanaConfiguracion.
-    '''
-
     v = VentanaConfiguracion(self.osc)
   
   def init_ventana_pot(self):
+    '''Crea un objeto de la clase VentanaMedidorPotencia.
+    
     '''
-    Crea un objeto de la clase VentanaMedidorPotencia.
-    '''
-
     print 'medidor de potencia'
     #v = VentanaMedidorPotencia()
 
 class VentanaConfiguracion(QtGui.QWidget):
-
   global osc
     
   def __init__(self, osciloscopio):
-
-    '''
-    Constructor de la ventana de configuracion del osciloscopio.
+    '''Constructor de la ventana de configuracion del osciloscopio.
     
     Parametros:
       osciloscopio: Objeto de la clase Osciloscopio
+    
     '''
-
     #Inicializacion de la ventana y de la variable osciloscopio con el objeto osciloscopio pasado como parametro
     super(VentanaConfiguracion, self).__init__()
     self.osc = osciloscopio
     self.conf_osc()
   
   def conf_osc(self):
+    '''Anade funcionalidades a la ventana de configuracion del osciloscopio.
+    
     '''
-    Anade funcionalidades a la ventana de configuracion del osciloscopio.
-    '''
-
     #Se crean los elementos de la ventana y se les anaden funcionalidades
     grid = QtGui.QGridLayout()
     grid.setSpacing(5)
@@ -249,8 +243,7 @@ class VentanaConfiguracion(QtGui.QWidget):
     self.show()
   
   def aceptar_conf(self, t, display, ch1, vdiv1, acop1, att1, ch2, vdiv2, acop2, att2):
-    '''
-    Configura el osciloscopio con los valores que se han seleccionado en la ventana.
+    '''Configura el osciloscopio con los valores que se han seleccionado en la ventana.
     
     Parametros:
       t: Base de tiempos del osciloscopio
@@ -263,8 +256,8 @@ class VentanaConfiguracion(QtGui.QWidget):
       vdiv2: Escala vertical del canal dos.
       acop2: Acoplamiento del canal dos.
       att2: Atenuacion de la sonda del canal dos.
+    
     '''
-
     #Cuando se acepta, se envian las configuraciones al osciloscopio que se ha pasado como parametro
     self.osc.set_display(display)
     self.osc.set_horizontal(str(t))
@@ -281,15 +274,14 @@ class VentanaConfiguracion(QtGui.QWidget):
       self.osc.disp_channel(False, '2')
   
   def medida(self, ch1, ch2):
-    '''
-    Crea un objeto de la clase Display en el que representa las senales que muestra el osciloscopio. Solo muestra los canales que esten seleccionados.
+    '''Crea un objeto de la clase Display en el que representa las senales que muestra el osciloscopio. Solo muestra los canales que esten seleccionados.
     Pide todos los puntos disponibles del osciloscopio. Oculta la pantalla de configuracion mientras muestra el osciloscopio.
     
     Parametros:
       ch1: Booleano. Muestra o no el canal uno.
       ch2: Booleano. Muestra o no el canal dos.
+    
     '''
-
     #Si los canales estan seleccionados se cogen sus datos, si no se dejan a cero
     if(ch1):
       self.osc.disp_channel(True, '1')
@@ -308,10 +300,9 @@ class VentanaConfiguracion(QtGui.QWidget):
     self.disp.show()
   
   def diagramaOjo(self, t_bit):
+    '''Crea on objeto de la clase Display en el que representa el diagrama de ojo del canal 1.
+    
     '''
-    Crea on objeto de la clase Display en el que representa el diagrama de ojo del canal 1.
-    '''
-
     tiempos_bit = {"200 ns":0x00, "50 ns":0x01, "14.3 ns":0x02, "6.67 ns":0x03}
     base_tiempos = {"200 ns":'50ns', "50 ns":'10ns', "14.3 ns":'5ns', "6.67 ns":'2.5ns'}
     
@@ -340,10 +331,9 @@ class VentanaConfiguracion(QtGui.QWidget):
     self.osc.set_trigger('1', 0)
   
   def medidas(self):
+    '''Crea un objeto de la clase VentanaMedidas.
+    
     '''
-    Crea un objeto de la clase VentanaMedidas.
-    '''
-
     #Llamar a una ventana nueva
     v = VentanaMedidas(self.osc)
 
@@ -351,22 +341,20 @@ class VentanaMedidas(QtGui.QWidget):
   global osc
   
   def __init__(self, osciloscopio):
-    '''
-    Constructor de la ventana que muestra las medidas del osciloscopio.
+    '''Constructor de la ventana que muestra las medidas del osciloscopio.
     
     Parametros:
       osciloscopio: Objeto de la clase Osciloscopio
+    
     '''
-
     super(VentanaMedidas, self).__init__()
     self.osc = osciloscopio
     self.inicializa()
   
   def inicializa(self):
+    '''Anade funcionalidades a la ventana de medidas.
+    
     '''
-    Anade funcionalidades a la ventana de medidas.
-    '''
-
     grid = QtGui.QGridLayout()
     grid.setSpacing(10)
     
@@ -513,14 +501,13 @@ class VentanaMedidas(QtGui.QWidget):
   
   
   def actualizar(self, canal, medida):
-    '''
-    Actualiza la medida del canal seleccionado y la muestra en la ventana.
+    '''Actualiza la medida del canal seleccionado y la muestra en la ventana.
     
     Parametros:
       canal: Canal del que se quiere actualizar la medida.
       medida: Tipo de medida que se quiere actualizar.
+    
     '''
-
     channel1= {"frecuencia":self.ch1_freq_label, "periodo":self.ch1_per_label, "vmedio":self.ch1_vmedio_label, "vpp":self.ch1_vpp_label, "vrms":self.ch1_vrms_label, "vmin":self.ch1_vmin_label, "vmax":self.ch1_vmax_label, "tsubida":self.ch1_tsubida_label, "tbajada":self.ch1_tbajada_label}
     channel2= {"frecuencia":self.ch2_freq_label, "periodo":self.ch2_per_label, "vmedio":self.ch2_vmedio_label, "vpp":self.ch2_vpp_label, "vrms":self.ch2_vrms_label, "vmin":self.ch2_vmin_label, "vmax":self.ch2_vmax_label, "tsubida":self.ch2_tsubida_label, "tbajada":self.ch2_tbajada_label}
     
@@ -533,23 +520,19 @@ class VentanaMedidas(QtGui.QWidget):
 
 
 class VentanaInfo(QtGui.QWidget):
-  '''
-  Tiene un boton aceptar para volver al orden de ejecucion
-  '''
+  '''Tiene un boton aceptar para volver al orden de ejecucion'''
   
   def __init__(self, texto):
-    '''
-    Constructor de una ventana de informacion
+    '''Constructor de una ventana de informacion
     
     Parametros:
       texto: Texto que mostrar'a la ventana
+    
     '''
-
     super(VentanaInfo, self).__init__()
     self.inicializa(texto)
   
   def inicializa(self, texto):
-
     win = QtGui.QMessageBox()
     win.setInformativeText(texto)
     win.setWindowTitle('Aviso')
@@ -557,17 +540,13 @@ class VentanaInfo(QtGui.QWidget):
     win.exec_()
 
 class VentanaAviso(QtGui.QWidget):
-  '''
-  No tiene boton
-  '''
+  '''No tiene boton'''
   
   def __init__(self, texto):
-
     super(VentanaAviso, self).__init__()
     self.inicializa(texto)
   
   def inicializa(self, texto):
-
     #QtGui.QMessageBox.about(self, 'Aviso', texto)
     grid = QtGui.QGridLayout()
     grid.setSpacing(5)
@@ -582,15 +561,13 @@ class VentanaAviso(QtGui.QWidget):
     self.show()
   
   def cerrar(self):
-
     self.close
     
 
 class Display(QtGui.QWidget):
   
   def __init__(self, lista_medidas1, inc_tiempo1, lista_medidas2, inc_tiempo2):
-    '''
-    Crea una ventana con el estilo de las de matlab, con matplotlib, para mostrar las dos senales representadas en el osciloscopio. Bloquea al resto de la aplicacion porque si no da problemas en la representacion de la ventana.
+    '''Crea una ventana con el estilo de las de matlab, con matplotlib, para mostrar las dos senales representadas en el osciloscopio. Bloquea al resto de la aplicacion porque si no da problemas en la representacion de la ventana.
     
     Representa las unidades con sus magnitudes en formato ingenieril. Para pintar las senales utiliza como datos del eje Y los valores que se le pasan en los argumentos lista_medidas y les asigna su posicion en el eje		 X segun el incremento de tiempo entre medidas que obtiene de los argumentos inc_tiempo y la posicion que ocupan en lista_medidas. 
     
@@ -599,6 +576,7 @@ class Display(QtGui.QWidget):
       inc_tiempo1: Diferencia de tiempo entre medidas.
       lista_medidas2: Valores de amplitud de los puntos del canal 2.
       inc_tiempo2: Diferencia de tiempo entre medidas.
+    
     '''
     
     super(Display, self).__init__()
@@ -664,7 +642,6 @@ class Display(QtGui.QWidget):
 class DisplayOjo(QtGui.QWidget):
   
   def __init__(self, medidas, tiempo):
-
     super(DisplayOjo, self).__init__()
     
     self.setWindowTitle('Diagrama de ojo')
@@ -765,7 +742,6 @@ class DisplayOjo(QtGui.QWidget):
     
   
   def botonClick(self):
-
     muestreo = int(self.box1.text()) # Cogemos los valores de los porcentajes como enteros de las cajas de texto
     umbral = int(self.box2.text())
     
@@ -788,7 +764,6 @@ class DisplayOjo(QtGui.QWidget):
     self.dibuja(valMuestreo, valUmbral)
   
   def dibuja(self, muestreo, umbral):
-
     puntoMuestreo = int(muestreo/self.inc_tiempo)
     amp = []
     
@@ -842,7 +817,6 @@ class DisplayOjo(QtGui.QWidget):
     self.canvas.draw()
   
   def media_y_varianza(self, data): 
-
     media = 0.0
     var = 0.0
     n = len(data)
@@ -855,7 +829,6 @@ class DisplayOjo(QtGui.QWidget):
     return media, var
   
   def muestra_resultados(self, v0, sigma0, v1, sigma1, q, ber):
-    
     string = 'v0: ' + str(round(v0,3)) + '\tsigma0: ' + str(round(sigma0,3)) + '\tQ: ' + str(round(q,2)) + '\n\n' + 'v1: ' + str(round(v1,3)) + '\tsigma1: ' + str(round(sigma1,3)) + '\tBER: ' + str(ber)
     self.resultados_label.setText(string) #Esto no esta funcionando. medice que no hay atributo resultados_label en diagrama de ojo
 
