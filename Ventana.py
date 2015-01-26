@@ -863,7 +863,7 @@ class DisplayOjo(QtGui.QWidget):
     return media, var
   
   def muestra_resultados(self, v0, sigma0, v1, sigma1, q, ber, num0, num1):
-    string = 'v0: ' + str(round(v0,3)) + '\tsigma0: ' + str(round(sigma0,3)) + '\tnumero de muestras0: ' + str(num0) + '\tQ: ' + str(round(q,2)) + '\n\n' + 'v1: ' + str(round(v1,3)) + '\tsigma1: ' + str(round(sigma1,3)) + '\tnumero de muestras1: ' + str(num1) + '\tBER: ' + '%.2e' % ber
+    string = 'v0: ' + str(round(v0,3)) + '\tsigma0: ' + str(round(sigma0,3)) + '\tnumero de muestras0: ' + str(num0) + '\tQ: ' + str(round(q,2)) + '\n\n' + 'v1: ' + str(round(v1,3)) + '\tsigma1: ' + str(round(sigma1,3)) + '\tnumero de muestras1: ' + str(num1) + '\tBER: ' + '%.2e' % ber # se muestra la ber en notacion cientifica
     self.resultados_label.setText(string)
 
 '''
