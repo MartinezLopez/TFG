@@ -93,6 +93,7 @@ class VentanaConfiguracion(QtGui.QWidget):
     bot_medidas = QtGui.QPushButton('Medidas', self)
     bot_ojo = QtGui.QPushButton('Ver', self)
     bot_cerrar = QtGui.QPushButton('Cerrar', self)
+    bot_fft = QtGui.QPushButton('FFT', self)
     
     tit_tiempo = QtGui.QLabel('Base de\ntiempos')
     tit_display = QtGui.QLabel('Modo del display')
@@ -218,6 +219,7 @@ class VentanaConfiguracion(QtGui.QWidget):
     grid.addWidget(tit_display, 3, 4)
     grid.addWidget(desp_disp, 3, 5)
     
+    grid.addWidget(bot_fft, 4, 3)
     grid.addWidget(bot_aceptar, 4, 4)
     grid.addWidget(bot_medir, 4, 5)
     grid.addWidget(bot_medidas, 4, 6)
@@ -234,6 +236,7 @@ class VentanaConfiguracion(QtGui.QWidget):
     bot_medir.clicked.connect(lambda: self.medida(ch1.isChecked(), ch2.isChecked()))
     bot_medidas.clicked.connect(lambda: self.medidas())
     bot_ojo.clicked.connect(lambda: self.diagramaOjo(desp_ojo.currentText()))
+    bot_fft.clicked.connect(lambda: self.fft(ch1.isChecked(), ch2.isChecked()))
     self.setLayout(grid)
         
     self.setGeometry(100, 100, 500, 500)
@@ -296,6 +299,25 @@ class VentanaConfiguracion(QtGui.QWidget):
       tiempo2 = []
     
     self.disp = Display(medida1, tiempo1, medida2, tiempo2)
+    self.disp.show()
+  
+  def fft(self, ch1, ch2):
+    
+    #Si los canales estan seleccionados se cogen sus datos, si no se dejan a cero
+    if(ch1):
+      self.osc.disp_channel(True, '1')
+      medida1, tiempo1 = self.osc.get_data('1', 1, 2500, '1')
+    else:
+      medida1 = []
+      tiempo1 = []
+    if(ch2):
+      self.osc.disp_channel(True, '2')
+      medida2, tiempo2 = self.osc.get_data('2', 1, 2500, '1')
+    else:
+      medida2 = []
+      tiempo2 = []
+    
+    self.disp = DispFreq(medida1, tiempo1, medida2, tiempo2)
     self.disp.show()
   
   def diagramaOjo(self, t_bit):
@@ -628,6 +650,72 @@ class Display(QtGui.QWidget):
     ax2.xaxis.set_major_formatter(formatter_tiempo)
     ax2.yaxis.set_major_formatter(formatter_amp)
     cursor2 = Cursor(ax2)#, useblit=True)
+    
+    self.canvas.update()
+    self.canvas.flush_events()
+
+class DispFreq(QtGui.QWidget):
+  
+  def __init__(self, lista_medidas1, inc_tiempo1, lista_medidas2, inc_tiempo2):
+    
+    super(DispFreq, self).__init__()
+    
+    self.figure = plt.figure()
+    self.canvas = FigureCanvas(self.figure)
+    self.toolbar = NavigationToolbar(self.canvas, self)
+    layout = QtGui.QVBoxLayout()
+    layout.addWidget(self.toolbar)
+    layout.addWidget(self.canvas)
+    self.setLayout(layout)
+    self.setFixedSize(1600,900)
+    self.setWindowTitle('FFT')
+    self.setWindowIcon(QtGui.QIcon('/home/debian/Desktop/Aplicacion/img/icono.gif'))
+    self.plot(lista_medidas1, inc_tiempo1, lista_medidas2, inc_tiempo2)
+    
+    
+  def plot(self, lista_medidas1, inc_tiempo1, lista_medidas2, inc_tiempo2):
+    
+    # Creamos los formatos que van a mostrar las unidades que se pintan
+    formatter_freq = EngFormatter(unit='Hz', places=1)
+    lista_tiempo1 = []
+    lista_tiempo2 = []
+    # Sabemos la diferencia de tiempos entre medidas, asi que multiplicando la posicion
+    # de cada dato por el incremento de tiempo sabemos su posicion en el eje X
+    for i in range(len(lista_medidas1)):
+      lista_tiempo1.append(inc_tiempo1*i)
+
+    for i in range(len(lista_medidas2)):
+      lista_tiempo2.append(inc_tiempo2*i)
+    
+    # Creamos dos subplots
+    ax1 = self.figure.add_subplot(211)
+    ax2 = self.figure.add_subplot(212)
+    
+    # Canal 1
+    n1 = len(lista_medidas1)
+    k1 = np.arange(n1)
+    T1 = n1*inc_tiempo1
+    frq1 = k1/T1
+    frq1 = frq1[range(n1/2)]
+    fft1 = np.fft.fft(lista_medidas1, 65536)/n1 # FFT normalizada
+    fft1 = fft1[range(n1/2)] 
+    ax1.plot(frq1, abs(fft1), 'y')
+    ax1.set_xlabel('Freq')
+    ax1.set_ylabel('|Y(freq)|')
+    ax1.xaxis.set_major_formatter(formatter_freq)
+    
+    # Canal 2
+    n2 = len(lista_medidas2)
+    k2 = np.arange(n2)
+    T2 = n2*inc_tiempo2
+    frq2 = k2/T2
+    frq2 = frq2[range(n2/2)]
+    fft2 = np.fft.fft(lista_medidas2, 65536)/n2 # FFT normalizada
+    fft2 = fft2[range(n2/2)] 
+    ax2.plot(frq2, abs(fft2), 'b')
+    ax2.set_xlabel('Freq')
+    ax2.set_ylabel('|Y(freq)|')
+    ax2.xaxis.set_major_formatter(formatter_freq)
     
     self.canvas.update()
     self.canvas.flush_events()
