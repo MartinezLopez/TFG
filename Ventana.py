@@ -3,7 +3,6 @@
 import sys
 from PyQt4 import QtGui, QtCore
 from Osciloscopio import *
-#from Display import *
 from Modbus import *
 import numpy as np
 import time
@@ -17,8 +16,7 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
 import matplotlib.pyplot as plt
 from matplotlib.ticker import EngFormatter, MultipleLocator
-from matplotlib.widgets import Cursor, Slider
-from matplotlib.patches import Rectangle
+from matplotlib.widgets import Cursor
 
 class VentanaPrincipal(QtGui.QWidget):
   global osc
