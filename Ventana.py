@@ -632,11 +632,11 @@ class Display(QtGui.QWidget):
     
     
     # Creamos dos subplots
-    ax1 = self.figure.add_subplot(211)
-    ax2 = self.figure.add_subplot(212)
+    ax1 = self.figure.add_subplot(211)#, axisbg='#6e6e6e')
+    ax2 = self.figure.add_subplot(212)#, axisbg='#6e6e6e')
     
     # Representamos el canal 1
-    ax1.plot(lista_tiempo1, lista_medidas1, 'y')
+    ax1.plot(lista_tiempo1, lista_medidas1, '#ff0000')
     ax1.set_xlabel('tiempo')
     ax1.set_ylabel('amplitud')
     ax1.xaxis.set_major_formatter(formatter_tiempo)
@@ -644,7 +644,7 @@ class Display(QtGui.QWidget):
     cursor1 = Cursor(ax1)#, useblit=True)
     
     # Representamos el canal 2
-    ax2.plot(lista_tiempo2, lista_medidas2, 'c')
+    ax2.plot(lista_tiempo2, lista_medidas2, '#0101df')
     ax2.set_xlabel('tiempo')
     ax2.set_ylabel('amplitud')
     ax2.xaxis.set_major_formatter(formatter_tiempo)
@@ -699,7 +699,7 @@ class DispFreq(QtGui.QWidget):
     frq1 = frq1[range(n1/2)]
     fft1 = np.fft.fft(lista_medidas1)/n1 #65536)/n1 # FFT normalizada
     fft1 = fft1[range(n1/2)]
-    ax1.semilogx(frq1, abs(fft1), 'y')
+    ax1.semilogx(frq1, abs(fft1), '#ff0000')
     ax1.set_xlabel('Freq')
     ax1.set_ylabel('|Y(freq)|')
     ax1.xaxis.set_major_formatter(formatter_freq)
@@ -712,7 +712,7 @@ class DispFreq(QtGui.QWidget):
     frq2 = frq2[range(n2/2)]
     fft2 = np.fft.fft(lista_medidas2)/n2 # FFT normalizada
     fft2 = fft2[range(n2/2)] 
-    ax2.semilogx(frq2, abs(fft2), 'b')
+    ax2.semilogx(frq2, abs(fft2), '#0101df')
     ax2.set_xlabel('Freq')
     ax2.set_ylabel('|Y(freq)|')
     ax2.xaxis.set_major_formatter(formatter_freq)
@@ -789,13 +789,13 @@ class DisplayOjo(QtGui.QWidget):
     
     # Creamos las barras horizontales y verticales de los subplots
     self.var = 25*self.inc_tiempo
-    self.barMuestreo = self.ax.axvline(x=muestreoInit, color='green')
-    self.barMuestreoMas = self.ax.axvline(x=muestreoInit + self.var, color='green', linestyle='--')
-    self.barMuestreoMenos = self.ax.axvline(x=muestreoInit - self.var, color='green', linestyle='--')
-    self.barUmbral = self.ax.axhline(y=umbralInit, color='blue')
-    self.barDecision2 = self.ax2.axvline(x=umbralInit, color='blue')
-    self.bar_q = self.ax3.axvline(x=10, color='blue') # Puede ser que no funcionara al empezar en cero haciendo infinito el logaritmo
-    self.bar_ber = self.ax3.axhline(y=10, color='blue')
+    self.barMuestreo = self.ax.axvline(x=muestreoInit, color='blue')
+    self.barMuestreoMas = self.ax.axvline(x=muestreoInit + self.var, color='blue', linestyle='--')
+    self.barMuestreoMenos = self.ax.axvline(x=muestreoInit - self.var, color='blue', linestyle='--')
+    self.barUmbral = self.ax.axhline(y=umbralInit, color='green')
+    self.barDecision2 = self.ax2.axvline(x=umbralInit, color='green')
+    self.bar_q = self.ax3.axvline(x=10, color='blue', linestyle='--') # Puede ser que no funcionara al empezar en cero haciendo infinito el logaritmo
+    self.bar_ber = self.ax3.axhline(y=10, color='blue', linestyle='--')
     
     # Esto hay que hacerlo antes de dibujar para que pueda poner los valores medios, q y la ber
     self.resultados_label = QtGui.QLabel(self)
@@ -877,47 +877,23 @@ class DisplayOjo(QtGui.QWidget):
     # Pintamos los histogramas y las gaussianas
     self.ax2.cla()
     self.ax2.set_xlabel('amplitud')
-    norm0, bins, patches = self.ax2.hist(val0, bins=200,range=[(5/4)*self.intervalo_amplitud[0], (5/4)*self.intervalo_amplitud[1]], normed=True, histtype='stepfilled', color='#ced8f6', rwidth=100)
+    norm0, bins, patches = self.ax2.hist(val0, bins=200,range=[(5/4)*self.intervalo_amplitud[0], (5/4)*self.intervalo_amplitud[1]], normed=True, histtype='step', color='#8181f7', rwidth=100)
     
-    norm1, bins, patches = self.ax2.hist(val1, bins=200,range=[(5/4)*self.intervalo_amplitud[0], (5/4)*self.intervalo_amplitud[1]], normed=True, histtype='stepfilled', color='#f5a9a9', rwidth=100)
+    norm1, bins, patches = self.ax2.hist(val1, bins=200,range=[(5/4)*self.intervalo_amplitud[0], (5/4)*self.intervalo_amplitud[1]], normed=True, histtype='step', color='#fa5858', rwidth=100)
     
     v0, sigma0 = self.media_y_varianza(val0)
     gauss0 = pylab.normpdf(bins, v0, sigma0)
-    self.ax2.plot(bins, gauss0, linewidth=2, color='#08088a')#azul
+    self.ax2.plot(bins, gauss0, linewidth=2, color='#0404b4')#azul
     
     v1, sigma1 = self.media_y_varianza(val1)
     gauss1 = pylab.normpdf(bins, v1, sigma1)
-    self.ax2.plot(bins, gauss1, linewidth=2, color='#8a0808')#rojo
+    self.ax2.plot(bins, gauss1, linewidth=2, color='#b40404')#rojo
     
     # Calculamos la ber
     q = math.fabs(v1-v0)/(sigma1+sigma0)
     ber = 0.5*erfc(q/math.sqrt(2))
     
     self.muestra_resultados(v0, sigma0, v1, sigma1, q, ber, len(val0), len(val1))
-    
-    #Pintamos la erfc
-    #self.ax3.cla()
-    #self.ax3.set_xlabel('q')
-    #self.ax3.set_ylabel('BER')
-    #self.ax3.set_yscale('log')
-    #eje_x = np.arange(0, 10, 0.5)
-    #bar_q = self.ax3.axvline(x=q, color='blue')
-    #bar_ber = self.ax3.axvline(x=ber, color='blue') hline
-    #self.ax3.hold(False)
-    '''plt.subplot(224)
-    plt.cla()
-    plt.semilogy(eje_x, 0.5*erfc(eje_x/math.sqrt(2)), color='#08088a') #parece que asi funciona mejor aunque no es definitivo
-    if q < 9.4:
-      plt.axhline(ber)
-      plt.axvline(q)
-    self.ax3.set_xlabel('q')
-    self.ax3.set_ylabel('BER')'''
-    #self.ax3.plot(eje_x, 0.5*erfc(eje_x/math.sqrt(2)), color='#08088a')
-    #self.ax3.set_yscale('log')
-    #self.ax3.hold(True)
-    #self.ax3.add_line(bar_q)
-    #self.ax3.add_line(bar_ber)
-    #self.ax3.set_yscale('log')
     
     # Recolocamos todas las barras
     self.ax2.add_line(self.barDecision2) # Vuelve a pintar la barra del umbral cuando se redibuja
