@@ -48,7 +48,7 @@ class VentanaPrincipal(QtGui.QWidget):
     self.setLayout(grid)        
     self.setGeometry(100, 100, 500, 500)
     self.setWindowTitle('Laboratorio de Comunicaciones Opticas')
-    self.setWindowIcon(QtGui.QIcon('/home/debian/Desktop/Aplicacion/img/icono.gif'))
+    self.setWindowIcon(QtGui.QIcon('/home/debian/Desktop/TFG/img/icono.gif'))
     #self.showMaximized()
     self.show()
     
@@ -244,7 +244,7 @@ class VentanaConfiguracion(QtGui.QWidget):
         
     self.setGeometry(100, 100, 500, 500)
     self.setWindowTitle('Osciloscopio')
-    self.setWindowIcon(QtGui.QIcon('/home/debian/Desktop/Aplicacion/img/icono.gif'))
+    self.setWindowIcon(QtGui.QIcon('/home/debian/Desktop/TFG/img/icono.gif'))
     self.show()
   
   def aceptar_conf(self, t, display, ch1, vdiv1, acop1, att1, ch2, vdiv2, acop2, att2):
@@ -520,7 +520,7 @@ class VentanaMedidas(QtGui.QWidget):
     self.setGeometry(100, 100, 500, 500)
     self.setLayout(grid)
     self.setWindowTitle('Medidas')
-    self.setWindowIcon(QtGui.QIcon('/home/debian/Desktop/Aplicacion/img/icono.gif'))
+    self.setWindowIcon(QtGui.QIcon('/home/debian/Desktop/TFG/img/icono.gif'))
     self.show()
   
   
@@ -563,7 +563,7 @@ class VentanaInfo(QtGui.QWidget):
     win.timer.start(10000) # Se cierra automaticamente a los 10 segundos
     win.setInformativeText(texto)
     win.setWindowTitle('Aviso')
-    win.setWindowIcon(QtGui.QIcon('/home/debian/Desktop/Aplicacion/img/icono.gif'))
+    win.setWindowIcon(QtGui.QIcon('/home/debian/Desktop/TFG/img/icono.gif'))
     win.exec_()
 
 class VentanaAviso(QtGui.QWidget):
@@ -617,7 +617,7 @@ class Display(QtGui.QWidget):
     self.setLayout(layout)
     self.setFixedSize(1600,900)
     self.setWindowTitle('Osciloscopio')
-    self.setWindowIcon(QtGui.QIcon('/home/debian/Desktop/Aplicacion/img/icono.gif'))
+    self.setWindowIcon(QtGui.QIcon('/home/debian/Desktop/TFG/img/icono.gif'))
     self.plot(lista_medidas1, inc_tiempo1, lista_medidas2, inc_tiempo2)
     
     
@@ -675,7 +675,7 @@ class DispFreq(QtGui.QWidget):
     self.setLayout(layout)
     self.setFixedSize(1600,900)
     self.setWindowTitle('FFT')
-    self.setWindowIcon(QtGui.QIcon('/home/debian/Desktop/Aplicacion/img/icono.gif'))
+    self.setWindowIcon(QtGui.QIcon('/home/debian/Desktop/TFG/img/icono.gif'))
     self.plot(lista_medidas1, inc_tiempo1, lista_medidas2, inc_tiempo2)
     
     
@@ -734,7 +734,7 @@ class DisplayOjo(QtGui.QWidget):
     
     logging.basicConfig(level=logging.DEBUG) # Se mantienen las trazas hasta comprobar que desaparece el problema 
     self.setWindowTitle('Diagrama de ojo')
-    self.setWindowIcon(QtGui.QIcon('/home/debian/Desktop/Aplicacion/img/icono.gif'))
+    self.setWindowIcon(QtGui.QIcon('/home/debian/Desktop/TFG/img/icono.gif'))
     self.setFixedSize(900,700)
     
     self.creaInterfaz(medidas, tiempo)
