@@ -63,6 +63,9 @@ class VentanaPrincipal(QtGui.QWidget):
     
     '''
     print 'medidor de potencia'
+    mb = Modbus()
+    power = mb.read_registers(0x03, 1, 1) #slaveAddress, firstRegister, numRegisters
+    print power[0]/1000.0
     #v = VentanaMedidorPotencia()
 
 class VentanaConfiguracion(QtGui.QWidget):
@@ -555,6 +558,9 @@ class VentanaInfo(QtGui.QWidget):
   
   def inicializa(self, texto):
     win = QtGui.QMessageBox()
+    win.timer = QtCore.QTimer(self)
+    win.timer.timeout.connect(win.close)
+    win.timer.start(10000) # Se cierra automaticamente a los 10 segundos
     win.setInformativeText(texto)
     win.setWindowTitle('Aviso')
     win.setWindowIcon(QtGui.QIcon('/home/debian/Desktop/Aplicacion/img/icono.gif'))
@@ -762,7 +768,7 @@ class DisplayOjo(QtGui.QWidget):
     # Representamos el diagrama
     self.ax.hold(True)
     for i in range(len(self.lista_medidas)):
-      self.ax.plot(self.lista_tiempo, self.lista_medidas[i], 'y')
+      self.ax.plot(self.lista_tiempo, self.lista_medidas[i], '#0b610b')
     self.ax.hold(False)
     self.ax.set_xlabel('tiempo')
     self.ax.set_ylabel('amplitud')
