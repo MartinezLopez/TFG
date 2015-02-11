@@ -10,7 +10,7 @@ class Modbus:
   def __init__(self):
     uart.setup("UART1")
     
-    self.master = modbus_rtu.RtuMaster(serial.Serial(port="/dev/ttyO1", baudrate=9600, bytesize=8, parity='N', stopbits=1, xonxoff=0))
+    self.master = modbus_rtu.RtuMaster(serial.Serial(port="/dev/ttyO1", baudrate=9600, bytesize=8, parity='N', stopbits=1, rtscts=True))
     self.master.set_timeout(5.0)
     self.master.set_verbose(False)
   
