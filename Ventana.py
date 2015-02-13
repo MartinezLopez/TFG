@@ -347,6 +347,7 @@ class VentanaConfiguracion(QtGui.QWidget):
     
     # Toma 32 trazas del osciloscopio
     for i in range(32):
+      aviso.actualiza_barra(i)
       QtCore.QCoreApplication.processEvents()
       medidas , inc_tiempo = self.osc.get_data('1', 500, 2000, '1')
       lista_medidas.append(medidas)
@@ -574,26 +575,28 @@ class VentanaAviso(QtGui.QDialog):
   
   def __init__(self, texto):
     QtGui.QDialog.__init__(self)
-    #super(VentanaAviso, self).__init__()
     self.setModal(True)
     self.inicializa(texto)
   
   def inicializa(self, texto):
-    #QtGui.QMessageBox.about(self, 'Aviso', texto)
     grid = QtGui.QGridLayout()
     grid.setSpacing(5)
     
     aviso = QtGui.QLabel(texto)
+    self.barra = QtGui.QProgressBar(self)
+    self.barra.setMinimum(1)
+    self.barra.setMaximum(32)
+
     grid.addWidget(aviso, 1, 1)
+    grid.addWidget(self.barra, 2, 1)
     
     self.setLayout(grid) 
     self.setGeometry(200, 200, 200, 200)
     self.setWindowTitle('Aviso')
-    #self.setWindowIcon(QtGui.QIcon('/home/debian/Desktop/Aplicacion/img/icono.gif'))
-    #self.show()
+    self.setWindowIcon(QtGui.QIcon('/home/debian/Desktop/TFG/img/icono.gif'))
   
-  def cerrar(self):
-    self.close
+  def actualiza_barra(self, val):
+    self.barra.setValue(val)
     
 
 class Display(QtGui.QWidget):
