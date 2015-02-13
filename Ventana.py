@@ -646,8 +646,8 @@ class Display(QtGui.QWidget):
     
     
     # Creamos dos subplots
-    ax1 = self.figure.add_subplot(211)#, axisbg='#6e6e6e')
-    ax2 = self.figure.add_subplot(212)#, axisbg='#6e6e6e')
+    ax1 = self.figure.add_subplot(211)
+    ax2 = self.figure.add_subplot(212)
     
     # Representamos el canal 1
     ax1.plot(lista_tiempo1, lista_medidas1, '#ff0000')
@@ -655,7 +655,7 @@ class Display(QtGui.QWidget):
     ax1.set_ylabel('amplitud')
     ax1.xaxis.set_major_formatter(formatter_tiempo)
     ax1.yaxis.set_major_formatter(formatter_amp)
-    cursor1 = Cursor(ax1)#, useblit=True)
+    self.cursor1 = Cursor(ax1, useblit=True, color='#0101df')
     
     # Representamos el canal 2
     ax2.plot(lista_tiempo2, lista_medidas2, '#0101df')
@@ -663,7 +663,7 @@ class Display(QtGui.QWidget):
     ax2.set_ylabel('amplitud')
     ax2.xaxis.set_major_formatter(formatter_tiempo)
     ax2.yaxis.set_major_formatter(formatter_amp)
-    cursor2 = Cursor(ax2)#, useblit=True)
+    self.cursor2 = Cursor(ax2, useblit=True, color='#ff0000')
     
     self.canvas.update()
     self.canvas.flush_events()
@@ -822,6 +822,10 @@ class DisplayOjo(QtGui.QWidget):
     
     self.box1 = QtGui.QLineEdit(self)
     self.box2 = QtGui.QLineEdit(self)
+    self.box1.setText("50")
+    self.box1.setFixedWidth(40)
+    self.box2.setText("50")
+    self.box2.setFixedWidth(40)
     self.muestreo_label = QtGui.QLabel('Punto de muestreo', self)
     self.umbral_label = QtGui.QLabel('Umbral', self)
     
