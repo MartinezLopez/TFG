@@ -3,7 +3,8 @@
 import sys
 from PyQt4 import QtGui, QtCore
 from Osciloscopio import *
-from Modbus import *
+#from Modbus import *
+from Pines import *
 import numpy as np
 import time
 import math
@@ -327,8 +328,12 @@ class VentanaConfiguracion(QtGui.QWidget):
     '''Crea on objeto de la clase Display en el que representa el diagrama de ojo del canal 1.
     
     '''
-    tiempos_bit = {"200 ns":0x00, "50 ns":0x01, "14.3 ns":0x02, "6.67 ns":0x03}
-    base_tiempos = {"200 ns":'50ns', "50 ns":'10ns', "14.3 ns":'5ns', "6.67 ns":'2.5ns'}
+    # Estos son los de modbus
+    #tiempos_bit = {"200 ns":0x00, "50 ns":0x01, "14.3 ns":0x02, "6.67 ns":0x03}
+    #base_tiempos = {"200 ns":'50ns', "50 ns":'10ns', "14.3 ns":'5ns', "6.67 ns":'2.5ns'}
+    
+    # Estos son los de Pines
+    tiempos_bit = {"200 ns":0, "50 ns":1, "14.3 ns":2, "6.67 ns":3}
     
     # Configuramos base de tiempos y amplitud
     self.osc.set_horizontal(base_tiempos[str(t_bit)]) #Por los qstring de qt4
@@ -341,7 +346,7 @@ class VentanaConfiguracion(QtGui.QWidget):
     # Configuramos el disparo
     self.osc.set_trigger('ext', 0)
     #aviso = VentanaInfo('La adquisicion de datos puede tardar un tiempo.\nPulse el boton "Ok" y espere, por favor.')
-    aviso = VentanaAviso('La adquisicion de datos puede tardar un tiempo.\nEspere, por favor.')
+    aviso = VentanaAviso('La adquisicion de datos puede tardar un tiempo.\n\nEspere, por favor.')
     aviso.show()
     lista_medidas = []
     
@@ -823,9 +828,9 @@ class DisplayOjo(QtGui.QWidget):
     self.box1 = QtGui.QLineEdit(self)
     self.box2 = QtGui.QLineEdit(self)
     self.box1.setText("50")
-    self.box1.setFixedWidth(40)
+    #self.box1.setFixedWidth(40)
     self.box2.setText("50")
-    self.box2.setFixedWidth(40)
+    #self.box2.setFixedWidth(40)
     self.muestreo_label = QtGui.QLabel('Punto de muestreo', self)
     self.umbral_label = QtGui.QLabel('Umbral', self)
     
@@ -836,7 +841,7 @@ class DisplayOjo(QtGui.QWidget):
     
     for w in [self.muestreo_label, self.box1, self.umbral_label, self.box2, self.boton]:
       hbox.addWidget(w)
-      hbox.setAlignment(w, QtCore.Qt.AlignVCenter)
+      hbox.setAlignment(w, QtCore.Qt.AlignLeft)#VCenter)
     
     vbox = QtGui.QVBoxLayout()
     vbox.addWidget(self.canvas)
